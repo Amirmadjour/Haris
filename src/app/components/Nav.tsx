@@ -3,7 +3,7 @@ import NotificationBell from "./NotificationBell";
 
 export default function Nav() {
   return (
-    <div className="bg-secondary flex items-center justify-between h-[140px] w-full px-20">
+    <div className="fixed z-50 bg-secondary flex items-center justify-between h-[140px] w-full px-20 shrink-0">
       <div className="flex gap-4 items-center justify-center">
         <Image src="/logoHaris.svg" alt="Logo" width={87} height={87} />
         <Image src="/haris.svg" alt="company name" width={152} height={75} />
@@ -21,7 +21,7 @@ export default function Nav() {
               className="rounded-full"
             />
           </div>
-          <p className="font-semibold text-xl text-white">Faisal Ghamdi</p>
+          <p className="font-semibold text-xl text-white font-inter">Faisal Ghamdi</p>
         </div>
         <Image src="/saudiMade.png" alt="Saudi made" width={97} height={38} />
       </div>

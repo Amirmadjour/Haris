@@ -43,7 +43,7 @@ const data: Payment[] = [
     analyst: "Faisal Ghamdi",
     status: "success",
     email: "ken99@example.com",
-    severity: "Medium",
+    severity: "Low",
   },
   {
     id: "3u1reuv4",
@@ -67,7 +67,7 @@ const data: Payment[] = [
     analyst: "Faisal Ghamdi",
     status: "success",
     email: "Silas22@example.com",
-    severity: "Medium",
+    severity: "High",
   },
   {
     id: "bhqecj4p",
@@ -96,11 +96,7 @@ export const columns: ColumnDef<Payment>[] = [
   },
   {
     accessorKey: "alert",
-    header: () => (
-      <div className="flex items-center gap-1 ">
-        Alert
-      </div>
-    ),
+    header: () => <div className="flex items-center gap-1 ">Alert</div>,
     cell: ({ row }) => <div>{row.getValue("alert")}</div>,
   },
   {
@@ -110,23 +106,99 @@ export const columns: ColumnDef<Payment>[] = [
   },
   {
     accessorKey: "status",
-    header: () => (
-      <div className="flex items-center gap-1 cursor-pointer">
-        Status
-        <ChevronDown className="text-white" size={20}/>
-      </div>
-    ),
+    header: ({ column }) => {
+      const statuses = ["pending", "processing", "success", "failed"];
+      const filterValues = (column.getFilterValue() as string[]) || statuses;
+
+      return (
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <div className="flex items-center gap-1 cursor-pointer">
+              Status
+              <ChevronDown className="text-white" size={20} />
+            </div>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent
+            align="center"
+            className="bg-secondary border-gray-dark"
+          >
+            <div className="absolute -top-1.5 left-1/2 transform -translate-x-1/2">
+              <div className="w-3 h-3 bg-secondary rotate-45 border-t border-l border-gray-dark" />
+            </div>
+            {statuses.map((status) => (
+              <DropdownMenuCheckboxItem
+                key={status}
+                checked={filterValues.includes(status)}
+                onSelect={(e) => e.preventDefault()}
+                onCheckedChange={(checked) => {
+                  const newFilterValues = checked
+                    ? [...filterValues, status]
+                    : filterValues.filter((v) => v !== status);
+                  column.setFilterValue(
+                    newFilterValues.length ? newFilterValues : undefined
+                  );
+                }}
+                className="font-medium text-white hover:bg-white/5 font-poppins"
+              >
+                {status}
+              </DropdownMenuCheckboxItem>
+            ))}
+          </DropdownMenuContent>
+        </DropdownMenu>
+      );
+    },
     cell: ({ row }) => <div>{row.getValue("status")}</div>,
+    filterFn: (row, columnId, filterValues: string[]) => {
+      return filterValues.includes(row.getValue(columnId));
+    },
   },
   {
     accessorKey: "severity",
-    header: () => (
-      <div className="flex items-center gap-1 cursor-pointer">
-        Severity
-        <ChevronDown className="text-white" size={20}/>
-      </div>
-    ),
+    header: ({ column }) => {
+      const severities = ["Medium", "Low", "High"];
+      const filterValues = (column.getFilterValue() as string[]) || severities;
+
+      return (
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <div className="flex items-center gap-1 cursor-pointer">
+              Severity
+              <ChevronDown className="text-white" size={20} />
+            </div>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent
+            align="center"
+            className="bg-secondary border-gray-dark"
+          >
+            <div className="absolute -top-1.5 left-1/2 transform -translate-x-1/2">
+              <div className="w-3 h-3 bg-secondary rotate-45 border-t border-l border-gray-dark" />
+            </div>
+            {severities.map((severity) => (
+              <DropdownMenuCheckboxItem
+                key={severity}
+                checked={filterValues.includes(severity)}
+                onSelect={(e) => e.preventDefault()}
+                onCheckedChange={(checked) => {
+                  const newFilterValues = checked
+                    ? [...filterValues, severity]
+                    : filterValues.filter((v) => v !== severity);
+                  column.setFilterValue(
+                    newFilterValues.length ? newFilterValues : undefined
+                  );
+                }}
+                className="text-white font-medium font-poppins"
+              >
+                {severity}
+              </DropdownMenuCheckboxItem>
+            ))}
+          </DropdownMenuContent>
+        </DropdownMenu>
+      );
+    },
     cell: ({ row }) => <div>{row.getValue("severity")}</div>,
+    filterFn: (row, columnId, filterValues: string[]) => {
+      return filterValues.includes(row.getValue(columnId));
+    },
   },
 ];
 
@@ -160,54 +232,18 @@ export function DataTable() {
 
   return (
     <div className="w-full px-20">
-      <div className="flex items-center py-4">
-        {/* <Input
-          placeholder="Filter emails..."
-          value={(table.getColumn("email")?.getFilterValue() as string) ?? ""}
-          onChange={(event) =>
-            table.getColumn("email")?.setFilterValue(event.target.value)
-          }
-          className="max-w-sm"
-        /> */}
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="outline" className="ml-auto">
-              Columns <ChevronDown />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            {table
-              .getAllColumns()
-              .filter((column) => column.getCanHide())
-              .map((column) => {
-                return (
-                  <DropdownMenuCheckboxItem
-                    key={column.id}
-                    className="capitalize"
-                    checked={column.getIsVisible()}
-                    onCheckedChange={(value) =>
-                      column.toggleVisibility(!!value)
-                    }
-                  >
-                    {column.id}
-                  </DropdownMenuCheckboxItem>
-                );
-              })}
-          </DropdownMenuContent>
-        </DropdownMenu>
-      </div>
       <div className="border-b border-gray-dark">
         <Table>
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (
               <TableRow
                 key={headerGroup.id}
-                className="border-gray-dark hover:bg-white/5"
+                className="border-gray-dark hover:bg-white/5 h-16"
               >
                 {headerGroup.headers.map((header) => {
                   return (
                     <TableHead
-                      className="text-white font-semibold text-xl"
+                      className="text-white font-semibold text-xl font-poppins"
                       key={header.id}
                     >
                       {header.isPlaceholder
@@ -231,7 +267,10 @@ export function DataTable() {
                   className="border-gray-dark hover:bg-white/5 h-16"
                 >
                   {row.getVisibleCells().map((cell) => (
-                    <TableCell key={cell.id} className="text-white ">
+                    <TableCell
+                      key={cell.id}
+                      className="text-white font-medium font-poppins"
+                    >
                       {flexRender(
                         cell.column.columnDef.cell,
                         cell.getContext()
@@ -241,10 +280,10 @@ export function DataTable() {
                 </TableRow>
               ))
             ) : (
-              <TableRow>
+              <TableRow className="hover:bg-white/5">
                 <TableCell
                   colSpan={columns.length}
-                  className="h-24 text-center"
+                  className="h-24 text-center text-white "
                 >
                   No results.
                 </TableCell>
@@ -253,30 +292,6 @@ export function DataTable() {
           </TableBody>
         </Table>
       </div>
-      {/* <div className="flex items-center justify-end space-x-2 py-4">
-        <div className="flex-1 text-sm text-muted-foreground">
-          {table.getFilteredSelectedRowModel().rows.length} of{" "}
-          {table.getFilteredRowModel().rows.length} row(s) selected.
-        </div>
-        <div className="space-x-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => table.previousPage()}
-            disabled={!table.getCanPreviousPage()}
-          >
-            Previous
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => table.nextPage()}
-            disabled={!table.getCanNextPage()}
-          >
-            Next
-          </Button>
-        </div>
-      </div> */}
     </div>
   );
 }
