@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono, Inter, Poppins } from "next/font/google";
+// import { Inter, Poppins } from "next/font/google";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -7,7 +7,7 @@ export const metadata: Metadata = {
   description: "By saudi pentesting company",
 };
 
-const inter = Inter({
+/* const inter = Inter({
   subsets: ["latin"],
   variable: "--font-inter",
   display: "swap",
@@ -20,7 +20,7 @@ const poppins = Poppins({
   display: "swap",
   weight: ["100", "200", "300", "400", "500", "600", "700", "800", "900"],
   adjustFontFallback: true,
-});
+}); */
 
 export default function RootLayout({
   children,
@@ -29,7 +29,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={`${inter.variable} ${poppins.variable} antialiased`}>
+      <body className={`antialiased`}>
         {children}
       </body>
     </html>
