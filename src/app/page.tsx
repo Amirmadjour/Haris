@@ -6,6 +6,7 @@ import StatisticCard from "./components/StatisticCard";
 
 export default function Home() {
   const [alerts, setAlerts] = useState<any>({});
+  const [isTableLoading, setIsTableLoading] = useState(true);
 
   async function logButtonClick() {
     await fetch("/api/log", {
@@ -19,9 +20,23 @@ export default function Home() {
   }
 
   useEffect(() => {
-    fetch("/api/table")
-      .then((res) => res.json())
-      .then((data) => setAlerts(data));
+    const fetchData = async () => {
+      try {
+        setIsTableLoading(true);
+        const response = await fetch("/api/table");
+        if (!response.ok) {
+          throw new Error("Network response was not ok");
+        }
+        const data = await response.json();
+        setAlerts(data);
+      } catch (err) {
+        console.error(err);
+      } finally {
+        setIsTableLoading(false);
+      }
+    };
+
+    fetchData();
   }, []);
 
   return (
@@ -48,12 +63,15 @@ export default function Home() {
           items={[
             { label: "Open", value: alerts?.statusCounts?.Open },
             { label: "Assigned", value: alerts?.statusCounts?.Assigned },
-            { label: "Engineering review", value: alerts?.statusCounts?.EngineeringReview },
+            {
+              label: "Engineering review",
+              value: alerts?.statusCounts?.EngineeringReview,
+            },
           ]}
         />
       </div>
 
-      <DataTable data={alerts?.caseDetails}/>
+      <DataTable data={alerts?.caseDetails} isLoading={isTableLoading}/>
     </div>
   );
 }

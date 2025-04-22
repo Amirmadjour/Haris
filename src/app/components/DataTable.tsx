@@ -35,6 +35,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { Skeleton } from "@/components/ui/skeleton";
 
 const data: Payment[] = [
   {
@@ -202,9 +203,7 @@ export const columns: ColumnDef<Payment>[] = [
   },
 ];
 
-export function DataTable({data = []}) {
-  if(!data) return
-
+export function DataTable({ data = [], isLoading = false }) {
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
     []
@@ -261,31 +260,77 @@ export function DataTable({data = []}) {
             ))}
           </TableHeader>
           <TableBody>
-            {table.getRowModel().rows?.length ? (
+            {isLoading ? (
+              // Loading skeleton state
+              [...Array(5)].map((_, rowIndex) => (
+                <TableRow
+                  key={`skeleton-${rowIndex}`}
+                  className="border-gray-dark h-16 hover:bg-white/5"
+                >
+                  {table.getAllLeafColumns().map((column, colIndex) => (
+                    <TableCell
+                      key={`skeleton-cell-${rowIndex}-${colIndex}`}
+                      className="text-white font-medium font-poppins"
+                    >
+                      <Skeleton className="h-4 w-full bg-white/5" />
+                    </TableCell>
+                  ))}
+                </TableRow>
+              ))
+            ) : table.getRowModel().rows?.length ? (
+              // Normal data state
               table.getRowModel().rows.map((row) => (
                 <TableRow
                   key={row.id}
                   data-state={row.getIsSelected() && "selected"}
                   className="border-gray-dark hover:bg-white/5 h-16"
                 >
-                  {row.getVisibleCells().map((cell) => (
-                    <TableCell
-                      key={cell.id}
-                      className="text-white font-medium font-poppins"
-                    >
-                      {flexRender(
-                        cell.column.columnDef.cell,
-                        cell.getContext()
-                      )}
-                    </TableCell>
-                  ))}
+                  {row.getVisibleCells().map((cell) => {
+                    const isSeverityCell = cell.column.id === "severity";
+                    const severityValue = cell.getValue() as string;
+
+                    let bgColor = "";
+                    if (isSeverityCell) {
+                      switch (severityValue) {
+                        case "Critical":
+                          bgColor = "bg-red-500";
+                          break;
+                        case "High":
+                          bgColor = "bg-[#FDFD9A] text-black";
+                          break;
+                        case "Medium":
+                          bgColor = "bg-[#DCFD77] text-black";
+                          break;
+                        case "Low":
+                          bgColor = "bg-[#C4FDFD] text-black";
+                          break;
+                        default:
+                          bgColor = "";
+                      }
+                    }
+
+                    return (
+                      <TableCell
+                        key={cell.id}
+                        className={`text-white font-medium font-poppins`}
+                      >
+                        <p className={`${bgColor} p-2 w-fit rounded-md`}>
+                          {flexRender(
+                            cell.column.columnDef.cell,
+                            cell.getContext()
+                          )}
+                        </p>
+                      </TableCell>
+                    );
+                  })}
                 </TableRow>
               ))
             ) : (
+              // Empty state
               <TableRow className="hover:bg-white/5">
                 <TableCell
                   colSpan={columns.length}
-                  className="h-24 text-center text-white "
+                  className="h-24 text-center text-white"
                 >
                   No results.
                 </TableCell>
