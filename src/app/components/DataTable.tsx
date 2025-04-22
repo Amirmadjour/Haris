@@ -107,7 +107,7 @@ export const columns: ColumnDef<Payment>[] = [
   {
     accessorKey: "status",
     header: ({ column }) => {
-      const statuses = ["pending", "processing", "success", "failed"];
+      const statuses = ["Open", "Assigned", "Engineering review"];
       const filterValues = (column.getFilterValue() as string[]) || statuses;
 
       return (
@@ -202,7 +202,9 @@ export const columns: ColumnDef<Payment>[] = [
   },
 ];
 
-export function DataTable() {
+export function DataTable({data = []}) {
+  if(!data) return
+
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
     []

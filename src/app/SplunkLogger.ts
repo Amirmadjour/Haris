@@ -6,7 +6,7 @@ import https from "https";
 const SPLUNK_HEC_URL =
   process.env.SPLUNK_HEC_URL || "https://localhost:8088/services/collector";
 const SPLUNK_HEC_TOKEN =
-  process.env.SPLUNK_HEC_TOKEN || "6605d18f-c88d-42fa-bbd5-ad8fa32c5245";
+  process.env.SPLUNK_HEC_TOKEN || "a1257f6b-a1b4-4411-950f-1177da1d75e0";
 
 const httpsAgent = new https.Agent({
   rejectUnauthorized: false, // ⛔️ disables cert validation (dev only)

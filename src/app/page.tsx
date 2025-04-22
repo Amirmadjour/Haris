@@ -1,9 +1,12 @@
 "use client";
+import { useEffect, useState } from "react";
 import { DataTable } from "./components/DataTable";
 import Nav from "./components/Nav";
 import StatisticCard from "./components/StatisticCard";
 
 export default function Home() {
+  const [alerts, setAlerts] = useState<any>({});
+
   async function logButtonClick() {
     await fetch("/api/log", {
       method: "POST",
@@ -14,6 +17,12 @@ export default function Home() {
       }),
     });
   }
+
+  useEffect(() => {
+    fetch("/api/table")
+      .then((res) => res.json())
+      .then((data) => setAlerts(data));
+  }, []);
 
   return (
     <div className="bg-primary flex flex-col items-center justify-start w-screen h-screen overflow-y-scroll">
@@ -28,23 +37,23 @@ export default function Home() {
         <StatisticCard
           title="Severity"
           items={[
-            { label: "Open", value: 12 },
-            { label: "High", value: 5 },
-            { label: "Medium", value: 7 },
-            { label: "Low", value: 0 },
+            { label: "Critical", value: alerts?.severityCounts?.Critical },
+            { label: "High", value: alerts?.severityCounts?.High },
+            { label: "Medium", value: alerts?.severityCounts?.Medium },
+            { label: "Low", value: alerts?.severityCounts?.Low },
           ]}
         />
         <StatisticCard
           title="Status"
           items={[
-            { label: "Open", value: 1 },
-            { label: "Assigned", value: 3 },
-            { label: "engineering review", value: 4 },
+            { label: "Open", value: alerts?.statusCounts?.Open },
+            { label: "Assigned", value: alerts?.statusCounts?.Assigned },
+            { label: "Engineering review", value: alerts?.statusCounts?.EngineeringReview },
           ]}
         />
       </div>
-      <button onClick={logButtonClick} className="bg-white w-40 h-10">Click Me</button>
-      <DataTable />
+
+      <DataTable data={alerts?.caseDetails}/>
     </div>
   );
 }
