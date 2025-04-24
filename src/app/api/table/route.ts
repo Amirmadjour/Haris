@@ -9,8 +9,10 @@ export async function GET() {
 
   // CORRECTED query format
   const SPL_QUERY = `
-  search index=* 
-| fields id alert_name analyst status severity
+search sourcetype="splunkd.log"  
+| search "Added type=enterprise license" OR "license stack" OR "Successfully added license"
+| table _time, host, user, log_level, component, message
+| sort -_time
   `;
 
   try {
@@ -60,8 +62,9 @@ export async function GET() {
 
     // Transform to match your UI structure
     if (!results) return;
+    console.log(results.data.results);
 
-    const transformedData = {
+    /* const transformedData = {
       severityCounts: {
         Critical: results.data.results.filter(
           (r: any) => r.severity === "Critical"
@@ -90,9 +93,30 @@ export async function GET() {
         status: r.status,
         severity: r.severity,
       })),
+    }; */
+
+
+    const transformedData = {
+      logLevelCounts: {
+        INFO: results.data.results.filter((r: any) => r.log_level === "INFO")
+          .length,
+        WARN: results.data.results.filter((r: any) => r.log_level === "WARN")
+          .length,
+        ERROR: results.data.results.filter((r: any) => r.log_level === "ERROR")
+          .length,
+      },
+      hosts: [...new Set(results.data.results.map((r: any) => r.host))],
+      licenseEvents: results.data.results.map((r: any) => ({
+        time: r._time,
+        host: r.host,
+        user: r.user,
+        level: r.log_level,
+        component: r.component,
+        message: r.message,
+      })),
     };
 
-    console.log(transformedData)
+    console.log(transformedData);
 
     return Response.json(transformedData);
   } catch (error: any) {

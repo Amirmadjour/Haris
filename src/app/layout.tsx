@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 // import { Inter, Poppins } from "next/font/google";
+import localFont from 'next/font/local';
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -7,20 +8,40 @@ export const metadata: Metadata = {
   description: "By saudi pentesting company",
 };
 
-/* const inter = Inter({
-  subsets: ["latin"],
-  variable: "--font-inter",
-  display: "swap",
-  adjustFontFallback: true,
+const inter = localFont({
+  src: [
+    {
+      path: '../../public/fonts/InterVariable.ttf',
+      weight: '100 900', 
+      style: 'normal',
+    },
+    {
+      path: '../../public/fonts/InterVariable-Italic.ttf',
+      weight: '100 900',
+      style: 'italic',
+    },
+  ],
+  variable: '--font-inter',
+  display: 'swap',
 });
 
-const poppins = Poppins({
-  subsets: ["latin"],
-  variable: "--font-poppins",
-  display: "swap",
-  weight: ["100", "200", "300", "400", "500", "600", "700", "800", "900"],
-  adjustFontFallback: true,
-}); */
+const poppins = localFont({
+  src: [
+    {
+      path: '../../public/fonts/PoppinsVariable.otf',
+      weight: '100 900', 
+      style: 'normal',
+    },
+    {
+      path: '../../public/fonts/PoppinsVariable-Italic.otf',
+      weight: '100 900',
+      style: 'italic',
+    },
+  ],
+  variable: '--font-poppins',
+  display: 'swap',
+});
+
 
 export default function RootLayout({
   children,
@@ -29,7 +50,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={`antialiased`}>
+      <body className={`${inter.variable} ${poppins.variable} antialiased`}>
         {children}
       </body>
     </html>

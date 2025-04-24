@@ -8,16 +8,13 @@ export default function Home() {
   const [alerts, setAlerts] = useState<any>({});
   const [isTableLoading, setIsTableLoading] = useState(true);
 
-  async function logButtonClick() {
-    await fetch("/api/log", {
-      method: "POST",
-      body: JSON.stringify({
-        message: "Button clicked",
-        level: "info",
-        metadata: { buttonId: "cta-primary" },
-      }),
-    });
-  }
+  /* index=_internal source=*splunkd.log "license" 
+| search "Added type=enterprise license" OR "license stack" OR "Successfully added license"
+| table _time, host, user, log_level, component, message
+| sort -_time */
+
+// reports
+// email
 
   useEffect(() => {
     const fetchData = async () => {

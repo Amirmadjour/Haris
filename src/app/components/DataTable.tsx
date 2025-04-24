@@ -156,7 +156,7 @@ export const columns: ColumnDef<Payment>[] = [
   {
     accessorKey: "severity",
     header: ({ column }) => {
-      const severities = ["Medium", "Low", "High"];
+      const severities = ["Medium", "Low", "High", "Critical"];
       const filterValues = (column.getFilterValue() as string[]) || severities;
 
       return (
@@ -314,12 +314,12 @@ export function DataTable({ data = [], isLoading = false }) {
                         key={cell.id}
                         className={`text-white font-medium font-poppins`}
                       >
-                        <p className={`${bgColor} p-2 w-fit rounded-md`}>
+                        <div className={`${bgColor} p-2 w-fit rounded-md`}>
                           {flexRender(
                             cell.column.columnDef.cell,
                             cell.getContext()
                           )}
-                        </p>
+                        </div>
                       </TableCell>
                     );
                   })}
