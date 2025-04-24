@@ -37,59 +37,7 @@ import {
 } from "@/components/ui/table";
 import { Skeleton } from "@/components/ui/skeleton";
 
-const data: Payment[] = [
-  {
-    id: "m5gr84i9",
-    alert: "YAHMI - Suspicious Execution blocked by Trellix | T1204 4o",
-    analyst: "Faisal Ghamdi",
-    status: "success",
-    email: "ken99@example.com",
-    severity: "Low",
-  },
-  {
-    id: "3u1reuv4",
-    alert: "YAHMI - Suspicious Execution blocked by Trellix | T1204 4o",
-    analyst: "Faisal Ghamdi",
-    status: "success",
-    email: "Abe45@example.com",
-    severity: "Medium",
-  },
-  {
-    id: "derv1ws0",
-    alert: "YAHMI - Suspicious Execution blocked by Trellix | T1204 4o",
-    analyst: "Faisal Ghamdi",
-    status: "processing",
-    email: "Monserrat44@example.com",
-    severity: "Medium",
-  },
-  {
-    id: "5kma53ae",
-    alert: "YAHMI - Suspicious Execution blocked by Trellix | T1204 4o",
-    analyst: "Faisal Ghamdi",
-    status: "success",
-    email: "Silas22@example.com",
-    severity: "High",
-  },
-  {
-    id: "bhqecj4p",
-    alert: "YAHMI - Suspicious Execution blocked by Trellix | T1204 4o",
-    analyst: "Faisal Ghamdi",
-    status: "failed",
-    email: "carmella@example.com",
-    severity: "Medium",
-  },
-];
-
-export type Payment = {
-  id: string;
-  alert: string;
-  analyst: string;
-  status: "pending" | "processing" | "success" | "failed";
-  severity: "Medium" | "Low" | "High";
-  email: string;
-};
-
-export const columns: ColumnDef<Payment>[] = [
+export const columns: ColumnDef<any>[] = [
   {
     accessorKey: "id",
     header: "ID",

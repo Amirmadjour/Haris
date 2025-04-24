@@ -9,7 +9,7 @@ export default async function handler(req, res) {
 
   try {
     await axios.post(
-      'http://localhost:8000/services/collector',  // Splunk HEC endpoint
+      'http://localhost:8000/services/collector',
       {
         event: {
           message,
@@ -18,7 +18,7 @@ export default async function handler(req, res) {
           ...metadata,
           timestamp: new Date().toISOString(),
         },
-        sourcetype: '_json',  // Parse as JSON
+        sourcetype: '_json', 
       },
       {
         headers: {

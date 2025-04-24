@@ -7,13 +7,15 @@ export async function GET() {
   const SPLUNK_USER = "admin";
   const SPLUNK_PASS = "MadjourAmir1#";
 
-  // CORRECTED query format
-  const SPL_QUERY = `
+/*  const SPL_QUERY = `
 search sourcetype="splunkd.log"  
 | search "Added type=enterprise license" OR "license stack" OR "Successfully added license"
 | table _time, host, user, log_level, component, message
 | sort -_time
-  `;
+  `; */
+
+  const SPL_QUERY = `
+  search sourcetype=test_sourcetype | table id alert_name analyst status severity`
 
   try {
     // Authentication
@@ -25,7 +27,6 @@ search sourcetype="splunkd.log"
 
     const sessionKey = authRes.data.sessionKey;
 
-    // Execute search (with proper command syntax)
     const searchRes = await axios.post(
       `${SPLUNK_HOST}/services/search/jobs`,
       `search=${encodeURIComponent(SPL_QUERY)}&output_mode=json`,
@@ -38,10 +39,8 @@ search sourcetype="splunkd.log"
       }
     );
 
-    // ... rest of your polling and results processing code ...
     const sid = searchRes.data.sid;
 
-    // Poll for results
     let isDone = false;
     let results;
     while (!isDone) {
@@ -60,11 +59,10 @@ search sourcetype="splunkd.log"
       }
     }
 
-    // Transform to match your UI structure
     if (!results) return;
     console.log(results.data.results);
 
-    /* const transformedData = {
+    const transformedData = {
       severityCounts: {
         Critical: results.data.results.filter(
           (r: any) => r.severity === "Critical"
@@ -92,27 +90,6 @@ search sourcetype="splunkd.log"
         analyst: r.analyst,
         status: r.status,
         severity: r.severity,
-      })),
-    }; */
-
-
-    const transformedData = {
-      logLevelCounts: {
-        INFO: results.data.results.filter((r: any) => r.log_level === "INFO")
-          .length,
-        WARN: results.data.results.filter((r: any) => r.log_level === "WARN")
-          .length,
-        ERROR: results.data.results.filter((r: any) => r.log_level === "ERROR")
-          .length,
-      },
-      hosts: [...new Set(results.data.results.map((r: any) => r.host))],
-      licenseEvents: results.data.results.map((r: any) => ({
-        time: r._time,
-        host: r.host,
-        user: r.user,
-        level: r.log_level,
-        component: r.component,
-        message: r.message,
       })),
     };
 
