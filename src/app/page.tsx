@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { DataTable } from "./components/DataTable";
 import Nav from "./components/Nav";
 import StatisticCard from "./components/StatisticCard";
-import AlertDisplay from "@/app/components/AlertDisplay"
+import AlertDisplay from "@/app/components/AlertDisplay";
 
 export default function Home() {
   const [alerts, setAlerts] = useState<any>({});
@@ -14,8 +14,8 @@ export default function Home() {
 | table _time, host, user, log_level, component, message
 | sort -_time */
 
-// reports
-// email
+  // reports
+  // email
 
   useEffect(() => {
     const fetchData = async () => {
@@ -46,30 +46,7 @@ export default function Home() {
         </p>
         <div className="bg-gray-dark w-full h-px"></div>
       </div>
-      <div className="px-20 w-full flex items-center justify-center gap-4">
-        <StatisticCard
-          title="Severity"
-          items={[
-            { label: "Critical", value: alerts?.severityCounts?.Critical },
-            { label: "High", value: alerts?.severityCounts?.High },
-            { label: "Medium", value: alerts?.severityCounts?.Medium },
-            { label: "Low", value: alerts?.severityCounts?.Low },
-          ]}
-        />
-        <StatisticCard
-          title="Status"
-          items={[
-            { label: "Open", value: alerts?.statusCounts?.Open },
-            { label: "Assigned", value: alerts?.statusCounts?.Assigned },
-            {
-              label: "Engineering review",
-              value: alerts?.statusCounts?.EngineeringReview,
-            },
-          ]}
-        />
-      </div>
       <AlertDisplay />
-      <DataTable data={alerts?.caseDetails} isLoading={isTableLoading}/>
     </div>
   );
 }

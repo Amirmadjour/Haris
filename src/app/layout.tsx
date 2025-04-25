@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 // import { Inter, Poppins } from "next/font/google";
 import localFont from 'next/font/local';
 import "./globals.css";
+import { Toaster } from "sonner";
 
 export const metadata: Metadata = {
   title: "Haris",
@@ -52,6 +53,7 @@ export default function RootLayout({
     <html lang="en">
       <body className={`${inter.variable} ${poppins.variable} antialiased`}>
         {children}
+        <Toaster richColors/>
       </body>
     </html>
   );

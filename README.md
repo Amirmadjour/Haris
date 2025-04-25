@@ -1,4 +1,29 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+
+curl -k https://localhost:8088/services/collector \
+  -H "Authorization: Splunk <YOUR_TOKEN>" \
+  -d '{"event": "Hello, world!", "sourcetype": "manual"}'
+
+if it works: {"text":"Success","code":0}
+
+
+Start docker container
+docker run -p 8000:8000 -p 8088:8088 \
+    -e "SPLUNK_PASSWORD=MadjourAmir1#" \
+    -e "SPLUNK_START_ARGS=--accept-license" \
+    --name splunk \
+    -it splunk/splunk:latest
+
+docker stop id_or_name
+
+Step							Done?
+
+- Ask client for HEC URL and token ✅				☐
+- Confirm SSL config (valid cert or self-signed) 🔒		☐
+- Set env vars in your app 📁					☐
+- Update code if self-signed cert used				☐
+- Build + deploy Next.js app on their server 🚀		☐
+- Test logs in Splunk UI (Search by sourcetype="_json")		☐
+
 
 Deployment on server:
 
