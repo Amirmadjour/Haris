@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { DataTable } from "./components/DataTable";
 import Nav from "./components/Nav";
 import StatisticCard from "./components/StatisticCard";
+import AlertDisplay from "@/app/components/AlertDisplay"
 
 export default function Home() {
   const [alerts, setAlerts] = useState<any>({});
@@ -67,7 +68,7 @@ export default function Home() {
           ]}
         />
       </div>
-
+      <AlertDisplay />
       <DataTable data={alerts?.caseDetails} isLoading={isTableLoading}/>
     </div>
   );
