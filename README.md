@@ -1,13 +1,14 @@
 
 curl -k https://localhost:8088/services/collector \
-  -H "Authorization: Splunk <YOUR_TOKEN>" \
+  -H "Authorization: Splunk cb5f3d64-250b-4ec9-85da-f2f028f401ab" \
   -d '{"event": "Hello, world!", "sourcetype": "manual"}'
 
 if it works: {"text":"Success","code":0}
 
 
 Start docker container
-docker run -p 8000:8000 -p 8088:8088 \
+docker run -p 8000:8000 -p 8088:8088 -p 8089:8089 \
+    -e TZ=Africa/Algiers \
     -e "SPLUNK_PASSWORD=MadjourAmir1#" \
     -e "SPLUNK_START_ARGS=--accept-license" \
     --name splunk \
@@ -38,13 +39,45 @@ Deployment on server:
 ## Add a webhook for Alerts
 
 curl -k https://localhost:8088/services/collector/event \
-  -H "Authorization: Splunk a443e563-5f6a-4f67-ab94-7d482210375a" \
+  -H "Authorization: Splunk cb5f3d64-250b-4ec9-85da-f2f028f401ab" \
   -H "Content-Type: application/json" \
   -d '{"event": {"id": 84078, "alert_name": "YAHMI - Suspicious Execution Blocked By Trellix", "analyst": "Faisal Ghamdi", "status": "Open", "severity": "Critical"}, "sourcetype": "test_sourcetype"}'
 
 
-##
+## Webhook test
 
 | makeresults 
 | eval _time=now(), message="TEST ALERT" 
 | sendalert webhook param.url="http://localhost:3000/api/splunk-alerts"
+
+
+## GET all alerts
+
+curl -k -u admin:MadjourAmir1# https://localhost:8089/services/alerts/fired_alerts \
+--get -d output_mode=json
+
+
+## GET all reports
+
+curl -k -u admin:MadjourAmir1# \
+http://localhost:8089/servicesNS/-/-/saved/searches \
+--get \
+-d output_mode=json \
+-d search="is_scheduled=1"
+
+## Simulate License Addition
+
+
+## Trigger alert
+
+curl -k https://localhost:8088/services/collector \
+-H "Authorization: Splunk cb5f3d64-250b-4ec9-85da-f2f028f401ab" \
+-d '{"event": "GET /test-page HTTP/1.1 500 Server Error", "sourcetype": "access_combined"}'
+
+##  Convert to a scheduled alert with 1-second window
+
+curl -k -u admin:MadjourAmir1# -X POST \
+"https://localhost:8089/servicesNS/admin/search/saved/searches/500_Server_Error" \
+-d dispatch.earliest_time="-1s" \
+-d dispatch.latest_time="now" \
+-d alert.track=1
