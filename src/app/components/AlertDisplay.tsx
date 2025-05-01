@@ -7,10 +7,59 @@ import StatisticCard from "./StatisticCard";
 import { DataTable } from "./DataTable";
 
 export default function SplunkAlertListener() {
-  const [alerts, setAlerts] = useState<any>();
+  const [alerts, setAlerts] = useState<any>({});
   const [data, setData] = useState<SplunkAlert[]>([]);
   const [connectionStatus, setConnectionStatus] = useState("connecting");
   const [isPushEnabled, setIsPushEnabled] = useState(false);
+  const [isLoadingHistory, setIsLoadingHistory] = useState(true);
+
+  // Add this function to fetch historical alerts
+  const fetchHistoricalAlerts = async () => {
+    try {
+      const res = await fetch("/api/history-alerts");
+      const data = await res.json();
+
+      console.log("data: ", data);
+      if (data.length === 0) return;
+      setData((prev) => [...data, ...prev]);
+
+      const transformedData = {
+        severityCounts: {
+          Critical: data?.filter((r: any) => r.severity === "Critical").length,
+          High: data?.filter((r: any) => r.severity === "High").length,
+          Medium: data?.filter((r: any) => r.severity === "Medium").length,
+          Low: data?.filter((r: any) => r.severity === "Low").length,
+          Info: data?.filter((r: any) => r.severity === "Info").length,
+        },
+        statusCounts: {
+          //Open: newAlertList.filter((r: any) => r.status === "Open").length,
+          Open: (alerts?.statusCounts?.Open || 0) + 1,
+          Assigned: data?.filter((r: any) => r.status === "Assigned").length,
+          EngineeringReview: data?.filter(
+            (r: any) => r.status === "Engineering Review"
+          ).length,
+        },
+        caseDetails: data?.map((r: any) => ({
+          id: r._serial,
+          alert: r.search_name,
+          analyst: "None",
+          status: "Open",
+          severity: r.severity,
+        })),
+      };
+
+      setAlerts(transformedData);
+    } catch (err) {
+      console.error("Client failed to fetch alerts:", err);
+    } finally {
+      setIsLoadingHistory(false);
+    }
+  };
+
+  // Add this useEffect for initial historical data load
+  useEffect(() => {
+    fetchHistoricalAlerts();
+  }, []);
 
   // Check push notification support and permission
   useEffect(() => {
@@ -71,43 +120,7 @@ export default function SplunkAlertListener() {
     eventSource.onmessage = (e) => {
       try {
         const alert = JSON.parse(e.data) as SplunkAlert;
-
-        setData((prevData) => {
-          const newAlertList = [...prevData, {...alert.result, search_name: alert.search_name}];
-
-          const transformedData = {
-            severityCounts: {
-              Critical: newAlertList.filter(
-                (r: any) => r.severity === "Critical"
-              ).length,
-              High: newAlertList.filter((r: any) => r.severity === "High")
-                .length,
-              Medium: newAlertList.filter((r: any) => r.severity === "Medium")
-                .length,
-              Low: newAlertList.filter((r: any) => r.severity === "Low").length,
-            },
-            statusCounts: {
-              //Open: newAlertList.filter((r: any) => r.status === "Open").length,
-              Open: (alerts?.statusCounts?.Open || 0) + 1,
-              Assigned: newAlertList.filter((r: any) => r.status === "Assigned")
-                .length,
-              EngineeringReview: newAlertList.filter(
-                (r: any) => r.status === "Engineering Review"
-              ).length,
-            },
-            caseDetails: newAlertList.map((r: any) => ({
-              id: r._serial,
-              alert: r.search_name,
-              analyst: "None",
-              status: "Open",
-              severity: r.severity,
-            })),
-          };
-
-          setAlerts(transformedData);
-
-          return newAlertList;
-        });
+        fetchHistoricalAlerts();
         toast.success(`New alert: ${alert.search_name}`);
         showPushNotification(alert);
       } catch (error) {
@@ -170,20 +183,42 @@ export default function SplunkAlertListener() {
         <StatisticCard
           title="Severity"
           items={[
-            { label: "Critical", value: alerts?.severityCounts?.Critical },
-            { label: "High", value: alerts?.severityCounts?.High },
-            { label: "Medium", value: alerts?.severityCounts?.Medium },
-            { label: "Low", value: alerts?.severityCounts?.Low },
+            {
+              label: "Critical",
+              value: alerts?.severityCounts?.Critical,
+              color: "#F57960",
+            },
+            {
+              label: "High",
+              value: alerts?.severityCounts?.High,
+              color: "#FDFD9A",
+            },
+            {
+              label: "Medium",
+              value: alerts?.severityCounts?.Medium,
+              color: "#DCFD77",
+            },
+            { label: "Low", value: alerts?.severityCounts?.Low, color: "#C4FDFD" },
+            { label: "Info", value: alerts?.severityCounts?.Info, color: "#ffffff" },
           ]}
         />
         <StatisticCard
           title="Status"
           items={[
-            { label: "Open", value: alerts?.statusCounts?.Open },
-            { label: "Assigned", value: alerts?.statusCounts?.Assigned },
+            {
+              label: "Open",
+              value: alerts?.statusCounts?.Open,
+              color: "#C4FDFD",
+            },
+            {
+              label: "Assigned",
+              value: alerts?.statusCounts?.Assigned,
+              color: "#F57960",
+            },
             {
               label: "Engineering review",
               value: alerts?.statusCounts?.EngineeringReview,
+              color: "#FCFFAA",
             },
           ]}
         />

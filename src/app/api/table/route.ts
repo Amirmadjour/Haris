@@ -1,6 +1,7 @@
 import https from "https";
 import axios from "axios";
 
+
 export async function GET() {
   const httpsAgent = new https.Agent({ rejectUnauthorized: false });
   const SPLUNK_HOST = "https://localhost:8089";

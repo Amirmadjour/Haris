@@ -36,6 +36,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Skeleton } from "@/components/ui/skeleton";
+import { DataTablePagination } from "./DataTablePagination";
 
 export const columns: ColumnDef<any>[] = [
   {
@@ -182,6 +183,7 @@ export function DataTable({ data = [], isLoading = false }) {
   return (
     <div className="w-full px-20">
       <div className="border-b border-gray-dark">
+        <DataTablePagination table={table}/>
         <Table>
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (
@@ -251,6 +253,9 @@ export function DataTable({ data = [], isLoading = false }) {
                           break;
                         case "Low":
                           bgColor = "bg-[#C4FDFD] text-black";
+                          break;
+                        case "Info":
+                          bgColor = "bg-[#C4FD6F] text-black";
                           break;
                         default:
                           bgColor = "";

@@ -67,6 +67,12 @@ http://localhost:8089/servicesNS/-/-/saved/searches \
 
 ## Simulate License Addition
 
+curl -k https://localhost:8088/services/collector \
+-H "Authorization: Splunk cb5f3d64-250b-4ec9-85da-f2f028f401ab" \
+-d '{"event": "Successfully added license new_license.license",
+  "sourcetype": "splunkd.log",
+  "host": "splunk-server-1",
+  "source": "/opt/splunk/var/log/splunk/splunkd.log"}'
 
 ## Trigger alert
 
