@@ -5,14 +5,14 @@ import https from "https";
 
 export const mapSeverity = (level: number): string => {
   const severityMap = {
-    1: 'Info',
-    2: 'Low',
-    3: 'Medium',
-    4: 'High',
-    5: 'Critical'
+    1: "Info",
+    2: "Low",
+    3: "Medium",
+    4: "High",
+    5: "Critical",
   };
-  
-  return severityMap[level as keyof typeof severityMap] || 'Unknown';
+
+  return severityMap[level as keyof typeof severityMap] || "Unknown";
 };
 
 export async function GET() {
@@ -38,7 +38,7 @@ export async function GET() {
           const alert = await axios.get(
             `https://localhost:8089/services/alerts/fired_alerts/${alertName}`,
             {
-              params: { output_mode: "json" },
+              params: { output_mode: "json", count: 1000 },
               headers: {
                 Authorization: `Basic ${auth}`,
               },
@@ -49,18 +49,17 @@ export async function GET() {
         })
     );
 
-    console.log("before Historical alerts", alertDetails);
-
     const historicalAlerts = alertDetails.flatMap((detail) =>
       detail?.entry.map((entry: any) => ({
         _time: entry?.content?.trigger_time_rendered,
         search_name: entry?.content?.savedsearch_name,
         _serial: entry?.content?.sid,
         severity: mapSeverity(entry?.content?.severity || 0),
+        status: "Open", // by default
       }))
     );
 
-    console.log("Historical alerts: ", historicalAlerts);
+    console.log("Historical alerts: ", historicalAlerts.length);
 
     return NextResponse.json(historicalAlerts);
   } catch (err: any) {

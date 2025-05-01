@@ -21,7 +21,6 @@ export default function SplunkAlertListener() {
 
       console.log("data: ", data);
       if (data.length === 0) return;
-      setData((prev) => [...data, ...prev]);
 
       const transformedData = {
         severityCounts: {
@@ -32,8 +31,7 @@ export default function SplunkAlertListener() {
           Info: data?.filter((r: any) => r.severity === "Info").length,
         },
         statusCounts: {
-          //Open: newAlertList.filter((r: any) => r.status === "Open").length,
-          Open: (alerts?.statusCounts?.Open || 0) + 1,
+          Open: data?.filter((r: any) => r.status === "Open").length,
           Assigned: data?.filter((r: any) => r.status === "Assigned").length,
           EngineeringReview: data?.filter(
             (r: any) => r.status === "Engineering Review"
@@ -43,7 +41,7 @@ export default function SplunkAlertListener() {
           id: r._serial,
           alert: r.search_name,
           analyst: "None",
-          status: "Open",
+          status: r.status,
           severity: r.severity,
         })),
       };
