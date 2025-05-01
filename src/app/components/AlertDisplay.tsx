@@ -6,6 +6,32 @@ import { toast } from "sonner";
 import StatisticCard from "./StatisticCard";
 import { DataTable } from "./DataTable";
 
+const transformData = (data: any) => {
+  return {
+    severityCounts: {
+      Critical: data?.filter((r: any) => r.severity === "Critical").length,
+      High: data?.filter((r: any) => r.severity === "High").length,
+      Medium: data?.filter((r: any) => r.severity === "Medium").length,
+      Low: data?.filter((r: any) => r.severity === "Low").length,
+      Info: data?.filter((r: any) => r.severity === "Info").length,
+    },
+    statusCounts: {
+      Open: data?.filter((r: any) => r.status === "Open").length,
+      Assigned: data?.filter((r: any) => r.status === "Assigned").length,
+      EngineeringReview: data?.filter(
+        (r: any) => r.status === "Engineering Review"
+      ).length,
+    },
+    caseDetails: data?.map((r: any) => ({
+      id: r._serial,
+      alert: r.search_name,
+      analyst: "None",
+      status: r.status,
+      severity: r.severity,
+    })),
+  };
+};
+
 export default function SplunkAlertListener() {
   const [alerts, setAlerts] = useState<any>({});
   const [data, setData] = useState<SplunkAlert[]>([]);
@@ -21,32 +47,9 @@ export default function SplunkAlertListener() {
 
       console.log("data: ", data);
       if (data.length === 0) return;
+      setData(data);
 
-      const transformedData = {
-        severityCounts: {
-          Critical: data?.filter((r: any) => r.severity === "Critical").length,
-          High: data?.filter((r: any) => r.severity === "High").length,
-          Medium: data?.filter((r: any) => r.severity === "Medium").length,
-          Low: data?.filter((r: any) => r.severity === "Low").length,
-          Info: data?.filter((r: any) => r.severity === "Info").length,
-        },
-        statusCounts: {
-          Open: data?.filter((r: any) => r.status === "Open").length,
-          Assigned: data?.filter((r: any) => r.status === "Assigned").length,
-          EngineeringReview: data?.filter(
-            (r: any) => r.status === "Engineering Review"
-          ).length,
-        },
-        caseDetails: data?.map((r: any) => ({
-          id: r._serial,
-          alert: r.search_name,
-          analyst: "None",
-          status: r.status,
-          severity: r.severity,
-        })),
-      };
-
-      setAlerts(transformedData);
+      setAlerts(transformData(data));
     } catch (err) {
       console.error("Client failed to fetch alerts:", err);
     } finally {
@@ -118,7 +121,9 @@ export default function SplunkAlertListener() {
     eventSource.onmessage = (e) => {
       try {
         const alert = JSON.parse(e.data) as SplunkAlert;
-        fetchHistoricalAlerts();
+        setTimeout(() => {
+          fetchHistoricalAlerts();
+        }, 1000);
         toast.success(`New alert: ${alert.search_name}`);
         showPushNotification(alert);
       } catch (error) {
@@ -196,8 +201,16 @@ export default function SplunkAlertListener() {
               value: alerts?.severityCounts?.Medium,
               color: "#DCFD77",
             },
-            { label: "Low", value: alerts?.severityCounts?.Low, color: "#C4FDFD" },
-            { label: "Info", value: alerts?.severityCounts?.Info, color: "#ffffff" },
+            {
+              label: "Low",
+              value: alerts?.severityCounts?.Low,
+              color: "#C4FDFD",
+            },
+            {
+              label: "Info",
+              value: alerts?.severityCounts?.Info,
+              color: "#ffffff",
+            },
           ]}
         />
         <StatisticCard
