@@ -105,7 +105,7 @@ export const columns: ColumnDef<any>[] = [
   {
     accessorKey: "severity",
     header: ({ column }) => {
-      const severities = ["Medium", "Low", "High", "Critical"];
+      const severities = ["Info", "Low", "Medium", "High", "Critical"];
       const filterValues = (column.getFilterValue() as string[]) || severities;
 
       return (
