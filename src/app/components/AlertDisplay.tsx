@@ -73,7 +73,7 @@ export default function SplunkAlertListener() {
         const alert = JSON.parse(e.data) as SplunkAlert;
 
         setData((prevData) => {
-          const newAlertList = [...prevData, alert.result];
+          const newAlertList = [...prevData, {...alert.result, search_name: alert.search_name}];
 
           const transformedData = {
             severityCounts: {
@@ -87,7 +87,8 @@ export default function SplunkAlertListener() {
               Low: newAlertList.filter((r: any) => r.severity === "Low").length,
             },
             statusCounts: {
-              Open: newAlertList.filter((r: any) => r.status === "Open").length,
+              //Open: newAlertList.filter((r: any) => r.status === "Open").length,
+              Open: (alerts?.statusCounts?.Open || 0) + 1,
               Assigned: newAlertList.filter((r: any) => r.status === "Assigned")
                 .length,
               EngineeringReview: newAlertList.filter(
@@ -95,21 +96,20 @@ export default function SplunkAlertListener() {
               ).length,
             },
             caseDetails: newAlertList.map((r: any) => ({
-              id: r.id,
-              alert: r.alert_name,
-              analyst: r.analyst,
-              status: r.status,
+              id: r._serial,
+              alert: r.search_name,
+              analyst: "None",
+              status: "Open",
               severity: r.severity,
             })),
           };
 
           setAlerts(transformedData);
 
-          toast.success(`New alert: ${alert.result.alert_name}`);
-          showPushNotification(alert);
-
-          return newAlertList; 
+          return newAlertList;
         });
+        toast.success(`New alert: ${alert.search_name}`);
+        showPushNotification(alert);
       } catch (error) {
         console.error("Error parsing alert:", error);
       }

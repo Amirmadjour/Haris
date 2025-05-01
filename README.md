@@ -81,3 +81,9 @@ curl -k -u admin:MadjourAmir1# -X POST \
 -d dispatch.earliest_time="-1s" \
 -d dispatch.latest_time="now" \
 -d alert.track=1
+
+## GET ALL Alerts
+
+curl -k -u admin:MadjourAmir1# https://localhost:8089/services/alerts/fired_alerts \
+--get -d output_mode=json
+

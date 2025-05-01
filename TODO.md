@@ -10,7 +10,7 @@
 
 - [ ] Make notifications
   - [ ] Design notification system
-  - [ ] Implement real-time updates
+  - [X] Implement real-time updates
 
 - [ ] Make chat
   - [ ] Set up chat interface
