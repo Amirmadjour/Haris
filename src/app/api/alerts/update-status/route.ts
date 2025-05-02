@@ -14,7 +14,7 @@ export async function POST(request: Request) {
 
     updateAlertStatus(serial, status, assignedTo || null);
 
-    return NextResponse.json({ success: true });
+    return NextResponse.json({ serial, status, assignedTo });
   } catch (err: any) {
     console.error("Update error:", err.message);
     return NextResponse.json({ error: err.message }, { status: 500 });

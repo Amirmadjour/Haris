@@ -37,8 +37,18 @@ import {
 } from "@/components/ui/table";
 import { Skeleton } from "@/components/ui/skeleton";
 import { DataTablePagination } from "./DataTablePagination";
+import { Alert } from "@/lib/splunkAlerts";
 
-export const columns: ColumnDef<any>[] = [
+const TEAM_MEMBERS = [
+  "Madjour amir",
+  "radhi badache",
+  "Amine chell",
+  "Faisal Ghamdi",
+];
+
+export const columns = (
+  updateRow: (serial: string, updates: Partial<Alert>) => void
+): ColumnDef<Alert>[] => [
   {
     accessorKey: "id",
     header: "ID",
@@ -97,7 +107,80 @@ export const columns: ColumnDef<any>[] = [
         </DropdownMenu>
       );
     },
-    cell: ({ row }) => <div>{row.getValue("status")}</div>,
+    cell: ({ row }) => {
+      const currentStatus = row.getValue("status") as string;
+      const currentAnalyst = row.getValue("analyst") as string;
+
+      return (
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <div className="flex items-center gap-1 cursor-pointer">
+              {currentStatus}
+              {currentStatus === "Open" && (
+                <ChevronDown className="text-white" size={16} />
+              )}
+            </div>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent
+            align="start"
+            className="bg-secondary border-gray-dark"
+          >
+            {currentStatus === "Open" ? (
+              <>
+                <DropdownMenuLabel className="text-white">
+                  Assign to
+                </DropdownMenuLabel>
+                <DropdownMenuSeparator className="bg-gray-dark" />
+                {TEAM_MEMBERS.map((member) => (
+                  <DropdownMenuItem
+                    key={member}
+                    className="text-white hover:bg-white/5"
+                    onClick={async () => {
+                      try {
+                        // Call your API to update the status
+                        const response = await fetch(
+                          "/api/alerts/update-status",
+                          {
+                            method: "POST",
+                            headers: {
+                              "Content-Type": "application/json",
+                            },
+                            body: JSON.stringify({
+                              serial: row.original._serial,
+                              status: "Assigned",
+                              assignedTo: member,
+                            }),
+                          }
+                        );
+
+                        if (response.ok) {
+                          console.log("updating local with", member);
+                          // Update the local data if needed
+                          updateRow(row.original._serial, {
+                            status: "Assigned",
+                            analyst: member,
+                          });
+
+                          console.log(row.original);
+                        }
+                      } catch (error) {
+                        console.error("Failed to update status:", error);
+                      }
+                    }}
+                  >
+                    {member}
+                  </DropdownMenuItem>
+                ))}
+              </>
+            ) : (
+              <DropdownMenuItem className="text-white pointer-events-none">
+                {currentAnalyst || "No analyst assigned"}
+              </DropdownMenuItem>
+            )}
+          </DropdownMenuContent>
+        </DropdownMenu>
+      );
+    },
     filterFn: (row, columnId, filterValues: string[]) => {
       return filterValues.includes(row.getValue(columnId));
     },
@@ -153,6 +236,7 @@ export const columns: ColumnDef<any>[] = [
 ];
 
 export function DataTable({ data = [], isLoading = false }) {
+  const [tableData, setTableData] = React.useState<Alert[]>(data);
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
     []
@@ -161,9 +245,23 @@ export function DataTable({ data = [], isLoading = false }) {
     React.useState<VisibilityState>({});
   const [rowSelection, setRowSelection] = React.useState({});
 
-  const table = useReactTable({
-    data,
-    columns,
+  React.useEffect(() => {
+    if (data && data.length > 0) {
+      setTableData(data);
+    }
+  }, [data]);
+
+  const updateRow = (serial: string, updates: Partial<Alert>) => {
+    setTableData((prevData) =>
+      prevData.map((row) =>
+        row._serial === serial ? { ...row, ...updates } : row
+      )
+    );
+  };
+
+  const table = useReactTable<Alert>({
+    data: tableData,
+    columns: columns(updateRow),
     onSortingChange: setSorting,
     onColumnFiltersChange: setColumnFilters,
     getCoreRowModel: getCoreRowModel(),
@@ -183,7 +281,7 @@ export function DataTable({ data = [], isLoading = false }) {
   return (
     <div className="w-full px-20">
       <div className="border-b border-gray-dark">
-        <DataTablePagination table={table}/>
+        <DataTablePagination table={table} />
         <Table>
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (

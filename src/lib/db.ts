@@ -52,6 +52,7 @@ export function insertAlerts(alerts: any[]) {
 }
 
 export function updateAlertStatus(serial: string, status: string, assignedTo: string) {
+  console.log("Assigned to : ", assignedTo)
   const stmt = db.prepare(`
     UPDATE alerts 
     SET status = ?, assigned_to = ?, updated_at = CURRENT_TIMESTAMP

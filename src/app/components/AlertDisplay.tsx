@@ -25,9 +25,10 @@ const transformData = (data: any) => {
     caseDetails: data?.map((r: any, index: number) => ({
       id: index + 1,
       alert: r.search_name,
-      analyst: "None",
+      analyst: r.assigned_to || 'No analyst assigned',
       status: r.status,
       severity: r.severity,
+      _serial: r._serial
     })),
   };
 };
@@ -90,30 +91,6 @@ export default function SplunkAlertListener() {
     }
   };
 
-  const updateStatus = async (_serial: any, status: any, assignedTo: any) => {
-    try {
-      const updateResutl = await fetch("/api/alerts/update-status", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          serial: _serial, // The _serial from the alert
-          status: status,
-          assignedTo: assignedTo,
-        }),
-      });
-
-      const alertsResponse = await fetch("/api/alerts/list");
-      const alertsList = await alertsResponse.json();
-
-      console.log("data: ", alertsList);
-      if (alertsList.length === 0) return;
-      setData(alertsList);
-
-      setAlerts(transformData(alertsList));
-    } catch (error) {
-      console.error(error);
-    }
-  };
 
   const showPushNotification = (alert: SplunkAlert) => {
     if (!isPushEnabled) return;
@@ -262,18 +239,7 @@ export default function SplunkAlertListener() {
           ]}
         />
       </div>
-      <button
-        onClick={() =>
-          updateStatus(
-            "rt_scheduler__admin__search__RMD580deccdbc990ec3d_at_1746173094_1.1",
-            "Assigned",
-            "Madjour amir"
-          )
-        }
-      >
-        Assign status
-      </button>
-      <DataTable data={alerts?.caseDetails} />
+      <DataTable data={alerts?.caseDetails} isLoading={isLoadingHistory}/>
     </div>
   );
 }

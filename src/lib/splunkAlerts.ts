@@ -1,4 +1,4 @@
-import { EventEmitter } from 'events';
+import { EventEmitter } from "events";
 
 // Define the alert type
 export type SplunkAlert = {
@@ -9,6 +9,15 @@ export type SplunkAlert = {
   _time: string;
   message: string;
   // Add other fields as needed
+};
+
+export type Alert = {
+  id: string | number;
+  alert: string;
+  analyst: string;
+  status: string;
+  severity: string;
+  _serial: string;
 };
 
 // Create a global event emitter (persists between requests)
