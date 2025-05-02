@@ -49,17 +49,20 @@ export async function GET() {
         })
     );
 
-    const historicalAlerts = alertDetails.flatMap((detail) =>
-      detail?.entry.map((entry: any) => ({
-        _time: entry?.content?.trigger_time_rendered,
-        search_name: entry?.content?.savedsearch_name,
-        _serial: entry?.content?.sid,
-        severity: mapSeverity(entry?.content?.severity || 0),
-        status: "Open", // by default
-      }))
-    );
+    const historicalAlerts = alertDetails
+      .flatMap((detail) =>
+        detail?.entry.map((entry: any) => ({
+          _time: entry?.content?.trigger_time_rendered,
+          search_name: entry?.content?.savedsearch_name,
+          _serial: entry?.content?.sid,
+          severity: mapSeverity(entry?.content?.severity || 0),
+          status: "Open", // by default
+          trigger_time: entry?.content?.trigger_time,
+        }))
+      )
+      .sort((a: any, b: any) => b.trigger_time - a.trigger_time);
 
-    console.log("Historical alerts: ", historicalAlerts.length);
+    console.log("Historical alerts: ", historicalAlerts);
 
     return NextResponse.json(historicalAlerts);
   } catch (err: any) {

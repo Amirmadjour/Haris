@@ -22,8 +22,8 @@ const transformData = (data: any) => {
         (r: any) => r.status === "Engineering Review"
       ).length,
     },
-    caseDetails: data?.map((r: any) => ({
-      id: r._serial,
+    caseDetails: data?.map((r: any, index: number) => ({
+      id: index+1,
       alert: r.search_name,
       analyst: "None",
       status: r.status,
