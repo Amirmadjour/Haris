@@ -1,3 +1,49 @@
+# installation
+
+## 🔧 Step 1: Install Node.js and Git (if needed)
+```bash
+sudo apt update
+sudo apt install -y nodejs npm git
+```
+
+## 📦 Step 2: Install and Build Your Next.js App
+
+
+```bash
+cd /home/username/your-nextjs-app
+```
+
+```bash
+npm install
+npm run build
+npm start
+```
+
+## 🌐 Step 3: Install and Start ngrok
+
+```bash
+npm install -g ngrok
+```
+```bash
+ngrok config add-authtoken <your_auth_token>
+```
+```bash
+ngrok http 3000
+```
+
+## 📬 Step 4: Use the ngrok URL in Splunk
+
+
+## 🛑 Optional: Run everything in the background
+
+
+```bash
+npm install -g pm2
+pm2 start npm --name "nextjs" -- start
+pm2 start "ngrok http 3000" --name "ngrok"
+```
+
+## Dev necessities
 
 curl -k https://localhost:8088/services/collector \
   -H "Authorization: Splunk cb5f3d64-250b-4ec9-85da-f2f028f401ab" \
