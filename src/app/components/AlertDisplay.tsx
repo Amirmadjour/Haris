@@ -23,7 +23,7 @@ const transformData = (data: any) => {
       ).length,
     },
     caseDetails: data?.map((r: any, index: number) => ({
-      id: index+1,
+      id: index + 1,
       alert: r.search_name,
       analyst: "None",
       status: r.status,
@@ -45,11 +45,14 @@ export default function SplunkAlertListener() {
       const res = await fetch("/api/history-alerts");
       const data = await res.json();
 
-      console.log("data: ", data);
-      if (data.length === 0) return;
-      setData(data);
+      const alertsResponse = await fetch("/api/alerts/list");
+      const alertsList = await alertsResponse.json();
 
-      setAlerts(transformData(data));
+      console.log("data: ", alertsList);
+      if (alertsList.length === 0) return;
+      setData(alertsList);
+
+      setAlerts(transformData(alertsList));
     } catch (err) {
       console.error("Client failed to fetch alerts:", err);
     } finally {
@@ -84,6 +87,31 @@ export default function SplunkAlertListener() {
       console.log("Service Worker registered");
     } catch (error) {
       console.error("Service Worker registration failed:", error);
+    }
+  };
+
+  const updateStatus = async (_serial: any, status: any, assignedTo: any) => {
+    try {
+      const updateResutl = await fetch("/api/alerts/update-status", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          serial: _serial, // The _serial from the alert
+          status: status,
+          assignedTo: assignedTo,
+        }),
+      });
+
+      const alertsResponse = await fetch("/api/alerts/list");
+      const alertsList = await alertsResponse.json();
+
+      console.log("data: ", alertsList);
+      if (alertsList.length === 0) return;
+      setData(alertsList);
+
+      setAlerts(transformData(alertsList));
+    } catch (error) {
+      console.error(error);
     }
   };
 
@@ -234,6 +262,17 @@ export default function SplunkAlertListener() {
           ]}
         />
       </div>
+      <button
+        onClick={() =>
+          updateStatus(
+            "rt_scheduler__admin__search__RMD580deccdbc990ec3d_at_1746173094_1.1",
+            "Assigned",
+            "Madjour amir"
+          )
+        }
+      >
+        Assign status
+      </button>
       <DataTable data={alerts?.caseDetails} />
     </div>
   );

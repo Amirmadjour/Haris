@@ -2,6 +2,7 @@
 import { NextResponse } from "next/server";
 import axios from "axios";
 import https from "https";
+import { insertAlerts, alertExists } from "@/lib/db";
 
 export const mapSeverity = (level: number): string => {
   const severityMap = {
@@ -56,15 +57,25 @@ export async function GET() {
           search_name: entry?.content?.savedsearch_name,
           _serial: entry?.content?.sid,
           severity: mapSeverity(entry?.content?.severity || 0),
-          status: "Open", // by default
+          status: "Open",
           trigger_time: entry?.content?.trigger_time,
         }))
       )
+      // Filter out alerts that already exist in our database
+      .filter((alert) => !alertExists(alert._serial))
       .sort((a: any, b: any) => b.trigger_time - a.trigger_time);
 
-    console.log("Historical alerts: ", historicalAlerts);
+    if (historicalAlerts.length > 0) {
+      // Only insert if we have new alerts
+      insertAlerts(historicalAlerts);
+    }
 
-    return NextResponse.json(historicalAlerts);
+    return NextResponse.json({
+      newAlerts: historicalAlerts,
+      message: historicalAlerts.length > 0 
+        ? `${historicalAlerts.length} new alerts added` 
+        : "No new alerts found"
+    });
   } catch (err: any) {
     console.error("API error:", err.message);
     return NextResponse.json({ error: err.message }, { status: 500 });
