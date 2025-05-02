@@ -19,6 +19,10 @@ export const mapSeverity = (level: number): string => {
 export async function GET() {
   const auth = Buffer.from("admin:MadjourAmir1#").toString("base64");
 
+  // fired alerts
+  // all saved searches
+  // remove fired alerts from 
+
   try {
     const alertsResponse = await axios.get(
       "https://localhost:8089/services/alerts/fired_alerts",
@@ -30,6 +34,7 @@ export async function GET() {
         httpsAgent: new https.Agent({ rejectUnauthorized: false }),
       }
     );
+
 
     const alertDetails = await Promise.all(
       alertsResponse.data.entry
