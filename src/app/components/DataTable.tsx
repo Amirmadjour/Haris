@@ -39,6 +39,7 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import { DataTablePagination } from "./DataTablePagination";
 import { Alert } from "@/lib/splunkAlerts";
+import { useRouter } from "next/navigation";
 
 const TEAM_MEMBERS = [
   "Madjour amir",
@@ -249,6 +250,7 @@ export function DataTable({ data = [], isLoading = false }) {
     pageIndex: 0,
     pageSize: 10,
   });
+  const router = useRouter();
 
   React.useEffect(() => {
     if (data && data.length > 0) {
@@ -335,55 +337,60 @@ export function DataTable({ data = [], isLoading = false }) {
               ))
             ) : table.getRowModel().rows?.length ? (
               // Normal data state
-              table.getRowModel().rows.map((row) => (
-                <TableRow
-                  key={row.id}
-                  data-state={row.getIsSelected() && "selected"}
-                  className="border-gray-dark hover:bg-white/5 h-16"
-                >
-                  {row.getVisibleCells().map((cell) => {
-                    const isSeverityCell = cell.column.id === "severity";
-                    const severityValue = cell.getValue() as string;
+              table.getRowModel().rows.map((row) => {
+                const serial = row.original._serial;
 
-                    let bgColor = "";
-                    if (isSeverityCell) {
-                      switch (severityValue) {
-                        case "Critical":
-                          bgColor = "bg-red-500";
-                          break;
-                        case "High":
-                          bgColor = "bg-[#FDFD9A] text-black";
-                          break;
-                        case "Medium":
-                          bgColor = "bg-[#DCFD77] text-black";
-                          break;
-                        case "Low":
-                          bgColor = "bg-[#C4FDFD] text-black";
-                          break;
-                        case "Info":
-                          bgColor = "bg-[#C4FD6F] text-black";
-                          break;
-                        default:
-                          bgColor = "";
+                return (
+                  <TableRow
+                    key={row.id}
+                    data-state={row.getIsSelected() && "selected"}
+                    className="border-gray-dark hover:bg-white/5 h-16"
+                    onClick={() => router.push(`/alerts/${serial}`)}
+                  >
+                    {row.getVisibleCells().map((cell) => {
+                      const isSeverityCell = cell.column.id === "severity";
+                      const severityValue = cell.getValue() as string;
+
+                      let bgColor = "";
+                      if (isSeverityCell) {
+                        switch (severityValue) {
+                          case "Critical":
+                            bgColor = "bg-red-500";
+                            break;
+                          case "High":
+                            bgColor = "bg-[#FDFD9A] text-black";
+                            break;
+                          case "Medium":
+                            bgColor = "bg-[#DCFD77] text-black";
+                            break;
+                          case "Low":
+                            bgColor = "bg-[#C4FDFD] text-black";
+                            break;
+                          case "Info":
+                            bgColor = "bg-[#C4FD6F] text-black";
+                            break;
+                          default:
+                            bgColor = "";
+                        }
                       }
-                    }
 
-                    return (
-                      <TableCell
-                        key={cell.id}
-                        className={`text-white font-medium font-poppins`}
-                      >
-                        <div className={`${bgColor} p-2 w-fit rounded-md`}>
-                          {flexRender(
-                            cell.column.columnDef.cell,
-                            cell.getContext()
-                          )}
-                        </div>
-                      </TableCell>
-                    );
-                  })}
-                </TableRow>
-              ))
+                      return (
+                        <TableCell
+                          key={cell.id}
+                          className={`text-white font-medium font-poppins`}
+                        >
+                          <div className={`${bgColor} p-2 w-fit rounded-md`}>
+                            {flexRender(
+                              cell.column.columnDef.cell,
+                              cell.getContext()
+                            )}
+                          </div>
+                        </TableCell>
+                      );
+                    })}
+                  </TableRow>
+                );
+              })
             ) : (
               // Empty state
               <TableRow className="hover:bg-white/5">
