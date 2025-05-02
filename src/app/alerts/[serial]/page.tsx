@@ -1,15 +1,32 @@
 // app/alerts/[serial]/page.tsx
 import { notFound } from "next/navigation";
 import AlertChat from "./chat";
+import Nav from "@/app/components/Nav";
 
 async function getAlert(serial: string) {
   const res = await fetch(`http://localhost:3000/api/alerts/${serial}`, {
-    cache: "no-store", 
+    cache: "no-store",
   });
 
   if (!res.ok) return null;
   return res.json();
 }
+const getSeverityColor = (severityValue: any) => {
+  switch (severityValue) {
+    case "Critical":
+      return "bg-red-500";
+    case "High":
+      return "bg-[#FDFD9A] text-black";
+    case "Medium":
+      return "bg-[#DCFD77] text-black";
+    case "Low":
+      return "bg-[#C4FDFD] text-black";
+    case "Info":
+      return "bg-[#C4FD6F] text-black";
+    default:
+      return "";
+  }
+};
 
 export default async function AlertDetailPage({
   params,
@@ -23,40 +40,50 @@ export default async function AlertDetailPage({
   }
 
   return (
-    <div className="container mx-auto p-4">
-      <div className="bg-white rounded-lg shadow p-6 mb-6">
-        <h1 className="text-2xl font-bold mb-4">{alert.search_name}</h1>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-          <div>
-            <p className="text-sm text-gray-500">ID</p>
-            <p>{alert.id}</p>
-          </div>
-          <div>
-            <p className="text-sm text-gray-500">Status</p>
-            <p>{alert.status}</p>
-          </div>
-          <div>
-            <p className="text-sm text-gray-500">Severity</p>
-            <p>{alert.severity}</p>
-          </div>
-          <div>
-            <p className="text-sm text-gray-500">Assigned To</p>
-            <p>{alert.assigned_to || "Unassigned"}</p>
-          </div>
-        </div>
+    <div className="bg-primary flex flex-col items-center justify-start w-screen h-screen overflow-y-scroll px-20">
+      <Nav />
+      <table className="w-full mt-[140px] text-white mb-10 font-poppins">
+        <thead>
+          <tr className="*:text-xl font-semibold text-left">
+            <th className="py-5">ID</th>
+            <th className="py-5">Alert</th>
+            <th className="py-5">Analyst</th>
+            <th className="py-5">Status</th>
+            <th className="py-5">Severity</th>
+          </tr>
+          <tr>
+            <td colSpan={5}>
+              <div className="w-full h-px bg-border" />
+            </td>
+          </tr>
+        </thead>
+        <tbody>
+          <tr className="text-left">
+            <td className="py-3">{alert.id}</td>
+            <td className="py-3">{alert.search_name}</td>
+            <td className="py-3">{alert.assigned_to || "Unassigned"}</td>
+            <td className="py-3">{alert.status}</td>
+            <td className="py-3">
+              <div className={`${getSeverityColor(alert.severity)} w-fit h-fit p-2 rounded-md`}>
+                {alert.severity}
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
 
-        {/* Optionally fetch getTeamMembers() server-side similarly */}
-        {/* Or move that logic to the API as well */}
+      {/* Optionally fetch getTeamMembers() server-side similarly */}
+      {/* Or move that logic to the API as well */}
 
-        <div className="mb-6">
-          <h2 className="text-lg font-semibold mb-2">Splunk Link</h2>
+      <div className="w-full flex gap-4">
+        <AlertChat alertSerial={params.serial} />
+        <div className="mb-6 bg-secondary h-fit p-4 rounded-2xl border border-border">
+          <h2 className="text-lg font-semibold mb-2 text-white">Splunk Link</h2>
           <a href="#" className="text-blue-600 hover:underline">
             https://example.com/chat-image-upload-Demo
           </a>
         </div>
       </div>
-
-      <AlertChat alertSerial={params.serial} />
     </div>
   );
 }

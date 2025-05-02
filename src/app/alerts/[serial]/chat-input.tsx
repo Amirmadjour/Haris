@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import { Send } from "lucide-react";
 
 export default function ChatInput({
   onSend,
@@ -80,28 +81,30 @@ export default function ChatInput({
   };
 
   return (
-    <div className="relative">
+    <div className="flex relative gap-6 px-4">
       <Textarea
         ref={textareaRef}
         value={message}
         onChange={handleInputChange}
         onKeyDown={handleKeyDown}
-        placeholder="Type your message here..."
-        rows={3}
+        placeholder="Message your team member"
+        rows={1}
       />
-      <div className="mt-2 flex justify-end">
-        <Button onClick={handleSend}>Send</Button>
+      <div className="flex justify-end">
+        <button onClick={handleSend} className="bg-brand p-2 w-fit h-fit rounded-md hover:opacity-90 transition-colors duration-300">
+          <Send className="text-white" />
+        </button>
       </div>
 
       {showMentions && (
         <div
-          className="absolute bottom-16 left-0 bg-white border rounded-lg shadow-lg z-10 w-48 max-h-60 overflow-y-auto"
+          className="absolute bottom-16 left-0 bg-primary border rounded-lg shadow-lg z-10 w-48 max-h-60 overflow-y-auto"
           style={{ top: "auto" }}
         >
           {filteredMembers.map((member) => (
             <div
               key={member.id}
-              className="p-2 hover:bg-gray-100 cursor-pointer"
+              className="p-2 hover:bg-gray-900 cursor-pointer"
               onClick={() => handleMentionSelect(member.name)}
             >
               {member.name}
