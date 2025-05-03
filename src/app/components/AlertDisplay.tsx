@@ -45,6 +45,7 @@ export default function SplunkAlertListener() {
     try {
       const res = await fetch("/api/history-alerts");
       const data = await res.json();
+      console.log("Data: ", data)
 
       const alertsResponse = await fetch("/api/alerts/list");
       const alertsList = await alertsResponse.json();

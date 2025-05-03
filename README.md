@@ -107,7 +107,7 @@ curl -k -u admin:MadjourAmir1# https://localhost:8089/services/alerts/fired_aler
 
 1 . https://localhost:8089/services/saved/searches/
 entry > 2 > id
-2 . https://localhost:8089/servicesNS/nobody/search/saved/searches/Errors%20in%20the%20last%2024%20hours
+2 . https://localhost:8089/servicesNS/nobody/search/saved/searches/Errors%20in%20the%20last%2024%20hours/history
 entry > 1 > id
 3. https://localhost:8089/services/search/v2/jobs/admin__nobody__search__RMD55d9ebac05a79f513_at_1746210162_6/events
 

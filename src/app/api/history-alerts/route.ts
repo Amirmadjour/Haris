@@ -18,23 +18,22 @@ export const mapSeverity = (level: number): string => {
 
 export async function GET() {
   const auth = Buffer.from("admin:MadjourAmir1#").toString("base64");
-
-  // fired alerts
-  // all saved searches
-  // remove fired alerts from 
+  const baseUrl = "https://localhost:8089";
+  const headers = {
+    Authorization: `Basic ${auth}`,
+  };
+  const agent = new https.Agent({ rejectUnauthorized: false });
 
   try {
+    // Step 1: Fetch fired alerts (existing implementation)
     const alertsResponse = await axios.get(
-      "https://localhost:8089/services/alerts/fired_alerts",
+      `${baseUrl}/services/alerts/fired_alerts`,
       {
         params: { output_mode: "json" },
-        headers: {
-          Authorization: `Basic ${auth}`,
-        },
-        httpsAgent: new https.Agent({ rejectUnauthorized: false }),
+        headers,
+        httpsAgent: agent,
       }
     );
-
 
     const alertDetails = await Promise.all(
       alertsResponse.data.entry
@@ -42,13 +41,11 @@ export async function GET() {
         .map(async (entry: any) => {
           const alertName = encodeURIComponent(entry.name);
           const alert = await axios.get(
-            `https://localhost:8089/services/alerts/fired_alerts/${alertName}`,
+            `${baseUrl}/services/alerts/fired_alerts/${alertName}`,
             {
               params: { output_mode: "json", count: 1000 },
-              headers: {
-                Authorization: `Basic ${auth}`,
-              },
-              httpsAgent: new https.Agent({ rejectUnauthorized: false }),
+              headers,
+              httpsAgent: agent,
             }
           );
           return alert.data;
@@ -64,22 +61,105 @@ export async function GET() {
           severity: mapSeverity(entry?.content?.severity || 0),
           status: "Open",
           trigger_time: entry?.content?.trigger_time,
+          type: "alert", // Mark as alert
         }))
       )
-      // Filter out alerts that already exist in our database
-      .filter((alert) => !alertExists(alert._serial))
-      .sort((a: any, b: any) => b.trigger_time - a.trigger_time);
+      .filter((alert) => !alertExists(alert._serial));
 
-    if (historicalAlerts.length > 0) {
-      // Only insert if we have new alerts
-      insertAlerts(historicalAlerts);
+    // Step 2: Fetch all saved searches (alerts + reports)
+    const savedSearchesResponse = await axios.get(
+      `${baseUrl}/services/saved/searches`,
+      {
+        params: { output_mode: "json" },
+        headers,
+        httpsAgent: agent,
+      }
+    );
+
+    // Step 3: Filter out alerts (we already have them) and process reports
+    const reports = savedSearchesResponse.data.entry.filter(
+      (search: any) =>
+        search.name !== "500_Sever_Error" && search.name !== "License_Change"
+    );
+
+    // Step 4: For each report, fetch search history and then events
+    const reportDetails = await Promise.all(
+      reports.map(async (report: any) => {
+        try {
+          // Get search history
+          const historyResponse = await axios.get(
+            `${baseUrl}/servicesNS/nobody/search/saved/searches/${encodeURIComponent(
+              report.name
+            )}/history`,
+            {
+              params: { output_mode: "json" },
+              headers,
+              httpsAgent: agent,
+            }
+          );
+
+          // Process each historical search job
+          const reportAlerts = await Promise.all(
+            historyResponse.data.entry.map(async (historyEntry: any) => {
+              // Get events for this search job
+              const eventsResponse = await axios.get(
+                `${historyEntry.id}/events`,
+                {
+                  params: {
+                    output_mode: "json",
+                    count: 1000,
+                  },
+                  headers,
+                  httpsAgent: agent,
+                }
+              );
+
+              return eventsResponse.data.results.map((event: any, index: number) => {
+                console.log("Report", event);
+                return {
+                  _time: event._time,
+                  search_name: report.name,
+                  _serial: historyEntry.name + index,
+                  severity: "Info", // Reports typically don't have severity
+                  status: "Completed",
+                  trigger_time: event._indextime,
+                  type: "report",
+                };
+              });
+            })
+          );
+
+          return reportAlerts.flat();
+        } catch (error) {
+          console.error(`Error processing report ${report.name}:`, error);
+          return [];
+        }
+      })
+    );
+
+    const historicalReports = reportDetails
+      .flat()
+      .filter((report) => !alertExists(report._serial));
+
+    console.log("historicalReports: ", historicalReports.length);
+
+    // Combine alerts and reports
+    const allHistoricalItems = [...historicalAlerts, ...historicalReports].sort(
+      (a: any, b: any) => b.trigger_time - a.trigger_time
+    );
+
+    if (allHistoricalItems.length > 0) {
+      console.log("All historical items: ", allHistoricalItems.length);
+      insertAlerts(allHistoricalItems);
     }
 
     return NextResponse.json({
       newAlerts: historicalAlerts,
-      message: historicalAlerts.length > 0 
-        ? `${historicalAlerts.length} new alerts added` 
-        : "No new alerts found"
+      newReports: historicalReports,
+      message:
+        allHistoricalItems.length > 0
+          ? `${allHistoricalItems.length} new items added (${historicalAlerts.length} alerts, ${historicalReports.length} reports)`
+          : "No new items found",
     });
   } catch (err: any) {
     console.error("API error:", err.message);
