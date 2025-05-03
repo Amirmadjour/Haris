@@ -42,7 +42,7 @@ export default async function AlertDetailPage({
   return (
     <div className="bg-primary flex flex-col items-center justify-start w-screen h-screen overflow-y-scroll px-20">
       <Nav />
-      <table className="w-full mt-[140px] text-white mb-10 font-poppins">
+      <table className="w-full mt-[140px] text-white mb-4 font-poppins">
         <thead>
           <tr className="*:text-xl font-semibold text-left">
             <th className="py-5">ID</th>

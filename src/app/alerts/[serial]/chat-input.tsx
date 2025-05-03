@@ -3,7 +3,8 @@
 import { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Send } from "lucide-react";
+import { Camera, Paperclip, Send, SendHorizontal } from "lucide-react";
+import { Input } from "@/components/ui/input";
 
 export default function ChatInput({
   onSend,
@@ -15,7 +16,7 @@ export default function ChatInput({
   const [mentionQuery, setMentionQuery] = useState("");
   const [mentionPosition, setMentionPosition] = useState(0);
   const [teamMembers, setTeamMembers] = useState<any[]>([]);
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const textareaRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     fetch("/api/team-members")
@@ -30,11 +31,11 @@ export default function ChatInput({
       )
     : teamMembers;
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     setMessage(value);
 
-    const cursorPos = e.target.selectionStart;
+    const cursorPos = e.target.selectionStart as number | undefined;
     const textBeforeCursor = value.substring(0, cursorPos);
     const lastAtPos = textBeforeCursor.lastIndexOf("@");
 
@@ -81,18 +82,23 @@ export default function ChatInput({
   };
 
   return (
-    <div className="flex relative gap-6 px-4">
-      <Textarea
+    <div className="flex relative gap-4 px-4">
+      <Input
         ref={textareaRef}
+        className="bg-border py-3 pl-14 h-fit"
         value={message}
         onChange={handleInputChange}
         onKeyDown={handleKeyDown}
         placeholder="Message your team member"
-        rows={1}
       />
+      <Paperclip className="text-white absolute left-8 top-3"/>
+      <Camera className="text-white absolute right-22 top-3"/>
       <div className="flex justify-end">
-        <button onClick={handleSend} className="bg-brand p-2 w-fit h-fit rounded-md hover:opacity-90 transition-colors duration-300">
-          <Send className="text-white" />
+        <button
+          onClick={handleSend}
+          className="bg-brand p-2 w-fit h-fit rounded-md hover:opacity-90 transition-colors duration-300"
+        >
+          <SendHorizontal className="text-black" />
         </button>
       </div>
 

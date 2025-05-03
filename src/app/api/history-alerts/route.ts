@@ -77,10 +77,12 @@ export async function GET() {
     );
 
     // Step 3: Filter out alerts (we already have them) and process reports
-    const reports = savedSearchesResponse.data.entry.filter(
-      (search: any) =>
-        search.name !== "500_Sever_Error" && search.name !== "License_Change"
-    );
+    const reports = savedSearchesResponse.data.entry.filter((search: any) => {
+      // Get all alert names from the historicalAlerts we already fetched
+      const alertNames = historicalAlerts.map((alert) => alert.search_name);
+
+      return !alertNames.includes(search.name);
+    });
 
     // Step 4: For each report, fetch search history and then events
     const reportDetails = await Promise.all(
@@ -114,18 +116,20 @@ export async function GET() {
                 }
               );
 
-              return eventsResponse.data.results.map((event: any, index: number) => {
-                console.log("Report", event);
-                return {
-                  _time: event._time,
-                  search_name: report.name,
-                  _serial: historyEntry.name + index,
-                  severity: "Info", // Reports typically don't have severity
-                  status: "Completed",
-                  trigger_time: event._indextime,
-                  type: "report",
-                };
-              });
+              return eventsResponse.data.results.map(
+                (event: any, index: number) => {
+                  console.log("Report", event);
+                  return {
+                    _time: event._time,
+                    search_name: report.name,
+                    _serial: historyEntry.name + index,
+                    severity: "Info", // Reports typically don't have severity
+                    status: "Completed",
+                    trigger_time: event._indextime,
+                    type: "report",
+                  };
+                }
+              );
             })
           );
 

@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import ChatInput from "./chat-input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { Video, Phone, EllipsisVertical } from "lucide-react";
 
 export default function AlertChat({ alertSerial }: { alertSerial: string }) {
   const [messages, setMessages] = useState<any[]>([]);
@@ -54,14 +55,27 @@ export default function AlertChat({ alertSerial }: { alertSerial: string }) {
 
   return (
     <Card className="w-full bg-secondary text-white border-border">
-      <CardHeader className="border-b flex gap-4">
-        <Avatar>
-          <AvatarImage src="/team.png" />
-          <AvatarFallback>Tr</AvatarFallback>
-        </Avatar>
-        <div className="flex flex-col gap-1 font-poppins">
-          <h2 className="text-lg font-semibold">Team members</h2>
-          <h2 className="text-sm">Ahmed , Hassan , Faisal</h2>
+      <CardHeader className="border-b flex gap-4 items-center justify-between h-fit py-0">
+        <div className="flex gap-4 items-center">
+          <Avatar>
+            <AvatarImage src="/team.png" />
+            <AvatarFallback>Tr</AvatarFallback>
+          </Avatar>
+          <div className="flex flex-col gap-1 font-poppins">
+            <h2 className="text-lg font-semibold">Team members</h2>
+            <h2 className="text-sm">Ahmed , Hassan , Faisal</h2>
+          </div>
+        </div>
+        <div className="flex items-center justify-center gap-6">
+          <button className="p-3 hover:bg-white/5 rounded-full transition-colors duration-100">
+            <Phone />
+          </button>
+          <button className="p-3 hover:bg-white/5 rounded-full transition-colors duration-100">
+            <Video />
+          </button>
+          <button className="p-3 hover:bg-white/5 rounded-full transition-colors duration-100">
+            <EllipsisVertical />
+          </button>
         </div>
       </CardHeader>
       <CardContent className="p-0">
@@ -74,9 +88,7 @@ export default function AlertChat({ alertSerial }: { alertSerial: string }) {
             messages.map((message) => (
               <div key={message.id} className="mb-4 flex gap-3">
                 <Avatar>
-                  <AvatarImage
-                    src="/user_01.png"
-                  />
+                  <AvatarImage src="/user_01.png" />
                   <AvatarFallback>{message.sender.charAt(0)}</AvatarFallback>
                 </Avatar>
                 <div>
