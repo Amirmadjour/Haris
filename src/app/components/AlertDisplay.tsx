@@ -23,7 +23,7 @@ const transformData = (data: any) => {
       ).length,
     },
     caseDetails: data?.map((r: any, index: number) => ({
-      id: index + 1,
+      id: r.id,
       alert: r.search_name,
       analyst: r.assigned_to || 'No analyst assigned',
       status: r.status,

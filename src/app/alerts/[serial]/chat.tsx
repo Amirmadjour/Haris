@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import ChatInput from "./chat-input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import { Video, Phone, EllipsisVertical } from "lucide-react";
+import { Video, Phone, EllipsisVertical, Paperclip } from "lucide-react";
 import { toast } from "sonner";
 
 export default function AlertChat({ alertSerial }: { alertSerial: string }) {
@@ -17,6 +17,7 @@ export default function AlertChat({ alertSerial }: { alertSerial: string }) {
     try {
       const response = await fetch(`/api/chat?alertSerial=${alertSerial}`);
       const data = await response.json();
+      console.log("chat data: ", data);
       setMessages(data.messages || []);
     } catch (error) {
       console.error("Failed to fetch messages", error);
@@ -36,20 +37,23 @@ export default function AlertChat({ alertSerial }: { alertSerial: string }) {
 
   const handleSendMessage = async (
     message: string,
-    mentions: string[] = []
+    mentions: string[] = [],
+    files: File[] = []
   ) => {
     try {
+      const formData = new FormData();
+      formData.append("alertSerial", alertSerial);
+      formData.append("sender", "Current User");
+      formData.append("message", message);
+      formData.append("mentions", JSON.stringify(mentions));
+
+      files.forEach((file, index) => {
+        formData.append(`file-${index}`, file);
+      });
+
       await fetch("/api/chat", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          alertSerial,
-          sender: "Current User", // Replace with actual user
-          message,
-          mentions,
-        }),
+        body: formData,
       });
       fetchMessages();
     } catch (error) {
@@ -58,6 +62,42 @@ export default function AlertChat({ alertSerial }: { alertSerial: string }) {
         description: "Failed to send message",
       });
     }
+  };
+
+  const renderMessageContent = (message: string, attachments: any[] = []) => {
+    return (
+      <div className="mt-1">
+        <p>
+          {message.split(" ").map((word: string, i: number) => {
+            if (word.startsWith("@")) {
+              const username = word.substring(1);
+              return (
+                <span key={i} className="text-blue-600 font-medium">
+                  {word}{" "}
+                </span>
+              );
+            }
+            return <span key={i}>{word} </span>;
+          })}
+        </p>
+        {attachments.length > 0 && (
+          <div className="mt-2 flex flex-wrap gap-2">
+            {attachments.map((attachment, index) => (
+              <a
+                key={index}
+                href={`/api/chat/attachments/${attachment.id}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-blue-500 hover:underline flex items-center gap-1"
+              >
+                <Paperclip className="h-3 w-3" />
+                {attachment.filename}
+              </a>
+            ))}
+          </div>
+        )}
+      </div>
+    );
   };
 
   return (
@@ -94,21 +134,7 @@ export default function AlertChat({ alertSerial }: { alertSerial: string }) {
                       {new Date(message.created_at).toLocaleString()}
                     </span>
                   </div>
-                  <p className="mt-1">
-                    {message.message
-                      .split(" ")
-                      .map((word: string, i: number) => {
-                        if (word.startsWith("@")) {
-                          const username = word.substring(1);
-                          return (
-                            <span key={i} className="text-blue-600 font-medium">
-                              {word}{" "}
-                            </span>
-                          );
-                        }
-                        return <span key={i}>{word} </span>;
-                      })}
-                  </p>
+                  {renderMessageContent(message.message, message.attachments)}
                 </div>
               </div>
             ))
