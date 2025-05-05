@@ -14,6 +14,7 @@ export function initDb() {
       status TEXT NOT NULL,
       trigger_time INTEGER NOT NULL,
       assigned_to TEXT,
+      splunk_link TEXT,
       updated_at TEXT DEFAULT CURRENT_TIMESTAMP
     );
     
@@ -54,8 +55,8 @@ export function alertExists(serial: string): boolean {
 export function insertAlerts(alerts: any[]) {
   const stmt = db.prepare(`
     INSERT OR IGNORE INTO alerts 
-    (_time, search_name, _serial, severity, status, trigger_time)
-    VALUES (?, ?, ?, ?, ?, ?)
+    (_time, search_name, _serial, severity, status, trigger_time, splunk_link)
+    VALUES (?, ?, ?, ?, ?, ?, ?)
   `);
 
   const insertMany = db.transaction((alerts: any) => {
@@ -67,7 +68,8 @@ export function insertAlerts(alerts: any[]) {
           alert._serial,
           alert.severity,
           alert.status,
-          alert.trigger_time
+          alert.trigger_time,
+          alert.splunk_link
         );
       }
     }

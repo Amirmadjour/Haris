@@ -5,9 +5,12 @@ import ChatInput from "./chat-input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Video, Phone, EllipsisVertical } from "lucide-react";
+import { toast } from "sonner";
 
 export default function AlertChat({ alertSerial }: { alertSerial: string }) {
   const [messages, setMessages] = useState<any[]>([]);
+  const [isCalling, setIsCalling] = useState(false);
+  const [isVideoOn, setIsVideoOn] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const fetchMessages = async () => {
@@ -17,6 +20,7 @@ export default function AlertChat({ alertSerial }: { alertSerial: string }) {
       setMessages(data.messages || []);
     } catch (error) {
       console.error("Failed to fetch messages", error);
+      toast.error("Error", { description: "Failed to fetch messages" });
     }
   };
 
@@ -50,6 +54,9 @@ export default function AlertChat({ alertSerial }: { alertSerial: string }) {
       fetchMessages();
     } catch (error) {
       console.error("Failed to send message", error);
+      toast.error("Error", {
+        description: "Failed to send message",
+      });
     }
   };
 
@@ -63,19 +70,8 @@ export default function AlertChat({ alertSerial }: { alertSerial: string }) {
           </Avatar>
           <div className="flex flex-col gap-1 font-poppins">
             <h2 className="text-lg font-semibold">Team members</h2>
-            <h2 className="text-sm">Ahmed , Hassan , Faisal</h2>
+            <h2 className="text-sm">Ahmed, Hassan, Faisal</h2>
           </div>
-        </div>
-        <div className="flex items-center justify-center gap-6">
-          <button className="p-3 hover:bg-white/5 rounded-full transition-colors duration-100">
-            <Phone />
-          </button>
-          <button className="p-3 hover:bg-white/5 rounded-full transition-colors duration-100">
-            <Video />
-          </button>
-          <button className="p-3 hover:bg-white/5 rounded-full transition-colors duration-100">
-            <EllipsisVertical />
-          </button>
         </div>
       </CardHeader>
       <CardContent className="p-0">

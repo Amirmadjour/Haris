@@ -34,6 +34,7 @@ export default async function AlertDetailPage({
   params: { serial: string };
 }) {
   const alert = await getAlert(params.serial);
+  console.log("alert: ", alert);
 
   if (!alert) {
     return notFound();
@@ -64,7 +65,11 @@ export default async function AlertDetailPage({
             <td className="py-3">{alert.assigned_to || "Unassigned"}</td>
             <td className="py-3">{alert.status}</td>
             <td className="py-3">
-              <div className={`${getSeverityColor(alert.severity)} w-fit h-fit p-2 rounded-md`}>
+              <div
+                className={`${getSeverityColor(
+                  alert.severity
+                )} w-fit h-fit p-2 rounded-md`}
+              >
                 {alert.severity}
               </div>
             </td>
@@ -77,10 +82,10 @@ export default async function AlertDetailPage({
 
       <div className="w-full flex gap-4">
         <AlertChat alertSerial={params.serial} />
-        <div className="mb-6 bg-secondary h-fit p-4 rounded-2xl border border-border">
+        <div className="mb-6 w-[50%] bg-secondary h-fit p-4 rounded-2xl border border-border">
           <h2 className="text-lg font-semibold mb-2 text-white">Splunk Link</h2>
-          <a href="#" className="text-blue-600 hover:underline">
-            https://example.com/chat-image-upload-Demo
+          <a href={alert.splunk_link} className="text-blue-600 hover:underline" target="_blank">
+            {alert.splunk_link}
           </a>
         </div>
       </div>

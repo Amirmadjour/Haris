@@ -82,7 +82,7 @@ export default function ChatInput({
   };
 
   return (
-    <div className="flex relative gap-4 px-4">
+    <div className="flex relative gap-4 px-4 items-center">
       <Input
         ref={textareaRef}
         className="bg-border py-3 pl-14 h-fit"
@@ -96,7 +96,7 @@ export default function ChatInput({
       <div className="flex justify-end">
         <button
           onClick={handleSend}
-          className="bg-brand p-2 w-fit h-fit rounded-md hover:opacity-90 transition-colors duration-300"
+          className="bg-brand p-2.5 w-fit h-fit rounded-md hover:opacity-90 transition-colors duration-300"
         >
           <SendHorizontal className="text-black" />
         </button>

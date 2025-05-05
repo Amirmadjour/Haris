@@ -16,6 +16,32 @@ export const mapSeverity = (level: number): string => {
   return severityMap[level as keyof typeof severityMap] || "Unknown";
 };
 
+function buildSplunkSearchUrl({
+  search_name,
+  splQuery,
+  sid,
+}: {
+  search_name: any;
+  splQuery: any;
+  sid: any;
+}) {
+  const baseUrl = "http://localhost:8000/en-US/app/search/search";
+  const savedSearchPath = `/servicesNS/admin/search/saved/searches/${search_name}`;
+  const params = new URLSearchParams({
+    s: savedSearchPath,
+    "display.page.search.mode": "verbose",
+    dispatch_sample_ratio: "1",
+    workload_pool: "",
+    q: splQuery,
+    earliest: "-60m@m",
+    latest: "now",
+    "display.page.search.tab": "events",
+    sid: sid,
+  });
+
+  return `${baseUrl}?${params.toString()}`;
+}
+
 export async function GET() {
   const auth = Buffer.from("admin:MadjourAmir1#").toString("base64");
   const baseUrl = "https://localhost:8089";
@@ -54,17 +80,27 @@ export async function GET() {
 
     const historicalAlerts = alertDetails
       .flatMap((detail) =>
-        detail?.entry.map((entry: any) => ({
-          _time: entry?.content?.trigger_time_rendered,
-          search_name: entry?.content?.savedsearch_name,
-          _serial: entry?.content?.sid,
-          severity: mapSeverity(entry?.content?.severity || 0),
-          status: "Open",
-          trigger_time: entry?.content?.trigger_time,
-          type: "alert", // Mark as alert
-        }))
+        detail?.entry.map((entry: any) => {
+          console.log("Entry: ", entry);
+          return {
+            _time: entry?.content?.trigger_time_rendered,
+            search_name: entry?.content?.savedsearch_name,
+            _serial: entry?.content?.sid,
+            severity: mapSeverity(entry?.content?.severity || 0),
+            status: "Open",
+            trigger_time: entry?.content?.trigger_time,
+            splunk_link: buildSplunkSearchUrl({
+              search_name: entry?.content?.savedsearch_name,
+              splQuery: "search index=500",
+              sid: entry?.content?.sid,
+            }),
+            type: "alert", // Mark as alert
+          };
+        })
       )
       .filter((alert) => !alertExists(alert._serial));
+
+    console.log("Historical alerts: ", historicalAlerts);
 
     // Step 2: Fetch all saved searches (alerts + reports)
     const savedSearchesResponse = await axios.get(
@@ -126,6 +162,7 @@ export async function GET() {
                     severity: "Info", // Reports typically don't have severity
                     status: "Completed",
                     trigger_time: event._indextime,
+                    splunk_link: event.id,
                     type: "report",
                   };
                 }
