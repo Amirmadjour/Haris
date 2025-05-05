@@ -82,9 +82,9 @@ export default async function AlertDetailPage({
 
       <div className="w-full flex gap-4">
         <AlertChat alertSerial={params.serial} />
-        <div className="mb-6 w-[50%] bg-secondary h-fit p-4 rounded-2xl border border-border">
+        <div className="mb-6 max-w-[40%] bg-secondary h-fit p-4 rounded-2xl border border-border">
           <h2 className="text-lg font-semibold mb-2 text-white">Splunk Link</h2>
-          <a href={alert.splunk_link} className="text-blue-600 hover:underline" target="_blank">
+          <a href={alert.splunk_link} className="text-blue-600 hover:underline wrap-anywhere" target="_blank">
             {alert.splunk_link}
           </a>
         </div>

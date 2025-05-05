@@ -51,9 +51,17 @@ export async function GET() {
   const agent = new https.Agent({ rejectUnauthorized: false });
 
   try {
-    // Step 1: Fetch fired alerts (existing implementation)
     const alertsResponse = await axios.get(
       `${baseUrl}/services/alerts/fired_alerts`,
+      {
+        params: { output_mode: "json" },
+        headers,
+        httpsAgent: agent,
+      }
+    );
+
+    const savedSearchesResponse = await axios.get(
+      `${baseUrl}/services/saved/searches`,
       {
         params: { output_mode: "json" },
         headers,
@@ -94,7 +102,7 @@ export async function GET() {
               splQuery: "search index=500",
               sid: entry?.content?.sid,
             }),
-            type: "alert", // Mark as alert
+            type: "alert", 
           };
         })
       )
@@ -102,29 +110,16 @@ export async function GET() {
 
     console.log("Historical alerts: ", historicalAlerts);
 
-    // Step 2: Fetch all saved searches (alerts + reports)
-    const savedSearchesResponse = await axios.get(
-      `${baseUrl}/services/saved/searches`,
-      {
-        params: { output_mode: "json" },
-        headers,
-        httpsAgent: agent,
-      }
-    );
 
-    // Step 3: Filter out alerts (we already have them) and process reports
     const reports = savedSearchesResponse.data.entry.filter((search: any) => {
-      // Get all alert names from the historicalAlerts we already fetched
       const alertNames = historicalAlerts.map((alert) => alert.search_name);
 
       return !alertNames.includes(search.name);
     });
 
-    // Step 4: For each report, fetch search history and then events
     const reportDetails = await Promise.all(
       reports.map(async (report: any) => {
         try {
-          // Get search history
           const historyResponse = await axios.get(
             `${baseUrl}/servicesNS/nobody/search/saved/searches/${encodeURIComponent(
               report.name
@@ -159,7 +154,7 @@ export async function GET() {
                     _time: event._time,
                     search_name: report.name,
                     _serial: historyEntry.name + index,
-                    severity: "Info", // Reports typically don't have severity
+                    severity: "Info", 
                     status: "Completed",
                     trigger_time: event._indextime,
                     splunk_link: event.id,
@@ -184,7 +179,6 @@ export async function GET() {
 
     console.log("historicalReports: ", historicalReports.length);
 
-    // Combine alerts and reports
     const allHistoricalItems = [...historicalAlerts, ...historicalReports].sort(
       (a: any, b: any) => b.trigger_time - a.trigger_time
     );
