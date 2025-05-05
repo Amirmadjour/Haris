@@ -9,13 +9,7 @@ export async function GET(
   { params }: { params: { id: string } }
 ) {
   const { id } = params;
-
-  if (!id) {
-    return new NextResponse(null, { status: 400 });
-  }
-
   try {
-    // Get attachment info from database
     const attachment: any = getAttachmentInfo(id);
     if (!attachment) {
       return new NextResponse(null, { status: 404 });
@@ -24,10 +18,16 @@ export async function GET(
     const file = fs.readFileSync(attachment.filepath);
     const stats = fs.statSync(attachment.filepath);
 
+    // Check if the file is an image
+    const isImage = attachment.content_type?.startsWith("image/");
+
     return new NextResponse(file, {
       headers: {
         "Content-Type": attachment.content_type || "application/octet-stream",
-        "Content-Disposition": `attachment; filename="${attachment.filename}"`,
+        // Display inline for images, force download for other types
+        "Content-Disposition": isImage
+          ? `inline; filename="${attachment.filename}"`
+          : `attachment; filename="${attachment.filename}"`,
         "Content-Length": stats.size.toString(),
       },
     });

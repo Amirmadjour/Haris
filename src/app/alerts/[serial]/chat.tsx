@@ -81,19 +81,40 @@ export default function AlertChat({ alertSerial }: { alertSerial: string }) {
           })}
         </p>
         {attachments.length > 0 && (
-          <div className="mt-2 flex flex-wrap gap-2">
-            {attachments.map((attachment, index) => (
-              <a
-                key={index}
-                href={`/api/chat/attachments/${attachment.id}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-blue-500 hover:underline flex items-center gap-1"
-              >
-                <Paperclip className="h-3 w-3" />
-                {attachment.filename}
-              </a>
-            ))}
+          <div className="mt-2 flex flex-col gap-2">
+            {attachments.map((attachment, index) => {
+              const isImage = attachment.contentType?.startsWith("image/");
+
+              return isImage ? (
+                <div key={index} className="max-w-xs">
+                  <img
+                    src={`/api/chat/attachments/${attachment.id}`}
+                    alt={attachment.filename}
+                    className="rounded-md max-h-64 object-contain"
+                  />
+                  <a
+                    href={`/api/chat/attachments/${attachment.id}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-xs text-gray-400 hover:underline flex items-center gap-1 mt-1"
+                  >
+                    <Paperclip className="h-3 w-3" />
+                    {attachment.filename}
+                  </a>
+                </div>
+              ) : (
+                <a
+                  key={index}
+                  href={`/api/chat/attachments/${attachment.id}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-blue-500 hover:underline flex items-center gap-1"
+                >
+                  <Paperclip className="h-3 w-3" />
+                  {attachment.filename}
+                </a>
+              );
+            })}
           </div>
         )}
       </div>
