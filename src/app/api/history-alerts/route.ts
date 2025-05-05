@@ -90,6 +90,14 @@ export async function GET() {
       .flatMap((detail) =>
         detail?.entry.map((entry: any) => {
           console.log("Entry: ", entry);
+          const splQuery = savedSearchesResponse.data.entry.find(
+            (entry_s: any) => {
+              return entry_s?.name === entry?.content?.savedsearch_name;
+            }
+          )?.content?.qualifiedSearch;
+
+          console.log("splQuery: ", splQuery);
+
           return {
             _time: entry?.content?.trigger_time_rendered,
             search_name: entry?.content?.savedsearch_name,
@@ -99,17 +107,16 @@ export async function GET() {
             trigger_time: entry?.content?.trigger_time,
             splunk_link: buildSplunkSearchUrl({
               search_name: entry?.content?.savedsearch_name,
-              splQuery: "search index=500",
+              splQuery: splQuery,
               sid: entry?.content?.sid,
             }),
-            type: "alert", 
+            type: "alert",
           };
         })
       )
       .filter((alert) => !alertExists(alert._serial));
 
     console.log("Historical alerts: ", historicalAlerts);
-
 
     const reports = savedSearchesResponse.data.entry.filter((search: any) => {
       const alertNames = historicalAlerts.map((alert) => alert.search_name);
@@ -154,7 +161,7 @@ export async function GET() {
                     _time: event._time,
                     search_name: report.name,
                     _serial: historyEntry.name + index,
-                    severity: "Info", 
+                    severity: "Info",
                     status: "Completed",
                     trigger_time: event._indextime,
                     splunk_link: event.id,
