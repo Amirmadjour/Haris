@@ -23,7 +23,7 @@ export default function Home() {
         setIsTableLoading(true);
         const response = await fetch("/api/table");
         if (!response.ok) {
-          throw new Error("Network response was not ok");
+          console.log("Response was not ok")
         }
         const data = await response.json();
         setAlerts(data);

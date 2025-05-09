@@ -114,7 +114,7 @@ export async function GET() {
           };
         })
       )
-      .filter((alert) => !alertExists(alert._serial));
+      .filter(async (alert) => !(await alertExists(alert._serial)));
 
     console.log("Historical alerts: ", historicalAlerts);
 
@@ -182,7 +182,7 @@ export async function GET() {
 
     const historicalReports = reportDetails
       .flat()
-      .filter((report) => !alertExists(report._serial));
+      .filter(async (report) => !(await alertExists(report._serial)));
 
     console.log("historicalReports: ", historicalReports.length);
 
@@ -192,7 +192,7 @@ export async function GET() {
 
     if (allHistoricalItems.length > 0) {
       console.log("All historical items: ", allHistoricalItems.length);
-      insertAlerts(allHistoricalItems);
+      await insertAlerts(allHistoricalItems);
     }
 
     return NextResponse.json({

@@ -1,5 +1,9 @@
 import { NextResponse } from "next/server";
-import { addChatMessage, getMessageAttachments, saveAttachment } from "@/lib/db";
+import {
+  addChatMessage,
+  getMessageAttachments,
+  saveAttachment,
+} from "@/lib/db";
 import { getOrCreateChatRoom, getChatMessages } from "@/lib/db";
 import type { NextRequest } from "next/server";
 import fs from "fs";
@@ -23,21 +27,35 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    const room: any = getOrCreateChatRoom(alertSerial);
-    const messages: any = getChatMessages(room.id);
-     // Enhance messages with their attachments
-    const messagesWithAttachments = messages.map((message: any) => {
-      const attachments: any = getMessageAttachments(message.id);
-      return {
-        ...message,
-        attachments: attachments.map((attachment: any) => ({
-          id: attachment.id,
-          filename: attachment.filename,
-          contentType: attachment.content_type,
-          size: attachment.size
-        }))
-      };
-    });
+    const room: any = await getOrCreateChatRoom(alertSerial);
+    const messages: any = await getChatMessages(room.id);
+
+    // Use Promise.all to await all the attachment fetches
+    const messagesWithAttachments = await Promise.all(
+      messages.map(async (message: any) => {
+        try {
+          const attachments: any = await getMessageAttachments(message.id);
+          return {
+            ...message,
+            attachments: attachments.map((attachment: any) => ({
+              id: attachment.id,
+              filename: attachment.filename,
+              contentType: attachment.content_type,
+              size: attachment.size,
+            })),
+          };
+        } catch (error) {
+          console.error(
+            `Failed to load attachments for message ${message.id}`,
+            error
+          );
+          return {
+            ...message,
+            attachments: [], // Return empty array if attachments fail to load
+          };
+        }
+      })
+    );
 
     return NextResponse.json({ messages: messagesWithAttachments });
   } catch (error) {
@@ -63,7 +81,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const room: any = getOrCreateChatRoom(alertSerial);
+    const room: any = await getOrCreateChatRoom(alertSerial);
     const messageId = await addChatMessage(room.id, sender, message, mentions);
 
     // Handle file attachments

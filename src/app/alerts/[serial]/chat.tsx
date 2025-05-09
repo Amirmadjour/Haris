@@ -9,8 +9,6 @@ import { toast } from "sonner";
 
 export default function AlertChat({ alertSerial }: { alertSerial: string }) {
   const [messages, setMessages] = useState<any[]>([]);
-  const [isCalling, setIsCalling] = useState(false);
-  const [isVideoOn, setIsVideoOn] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const fetchMessages = async () => {
@@ -146,16 +144,16 @@ export default function AlertChat({ alertSerial }: { alertSerial: string }) {
               <div key={message.id} className="mb-4 flex gap-3">
                 <Avatar>
                   <AvatarImage src="/user_01.png" />
-                  <AvatarFallback>{message.sender.charAt(0)}</AvatarFallback>
+                  <AvatarFallback>{message?.sender.charAt(0)}</AvatarFallback>
                 </Avatar>
                 <div>
                   <div className="flex items-center gap-2">
-                    <span className="font-semibold">{message.sender}</span>
+                    <span className="font-semibold">{message?.sender}</span>
                     <span className="text-xs text-gray-500">
                       {new Date(message.created_at).toLocaleString()}
                     </span>
                   </div>
-                  {renderMessageContent(message.message, message.attachments)}
+                  {renderMessageContent(message?.message, message?.attachments)}
                 </div>
               </div>
             ))

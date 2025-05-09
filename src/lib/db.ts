@@ -6,7 +6,7 @@ const UPLOAD_DIR = path.join(process.cwd(), 'uploads');
 
 // MySQL connection configuration using your cPanel details
 const pool = mysql.createPool({
-  host: 'madjria.com',
+  host: 'eris-shared-g1.dzsecurity.net',
   user: 'madjri81_amir_haris',
   password: 'p)c9BsL\'cTW"4Su',
   database: 'madjri81_haris',
@@ -187,7 +187,6 @@ export async function insertAlerts(alerts: any[]) {
 }
 
 export async function updateAlertStatus(serial: string, status: string, assignedTo: string) {
-  console.log("Assigned to : ", assignedTo);
   await pool.query(
     `UPDATE alerts 
     SET status = ?, assigned_to = ?, updated_at = CURRENT_TIMESTAMP

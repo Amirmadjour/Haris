@@ -34,7 +34,7 @@ interface PageProps {
 }
 
 export default async function AlertDetailPage({ params }: any) {
-  const alert = await getAlert(params.serial);
+  const alert = await getAlert(await params.serial);
   console.log("alert: ", alert);
 
   if (!alert) {
@@ -82,7 +82,7 @@ export default async function AlertDetailPage({ params }: any) {
       {/* Or move that logic to the API as well */}
 
       <div className="w-full flex gap-4">
-        <AlertChat alertSerial={params.serial} />
+        <AlertChat alertSerial={alert._serial} />
         <div className="mb-6 max-w-[40%] bg-secondary h-fit p-4 rounded-2xl border border-border">
           <h2 className="text-lg font-semibold mb-2 text-white">Splunk Link</h2>
           <a

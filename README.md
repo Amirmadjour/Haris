@@ -139,3 +139,8 @@ curl -k -u admin:MadjourAmir1# -X POST \
 curl -k -u admin:MadjourAmir1# https://localhost:8089/services/alerts/fired_alerts \
 --get -d output_mode=json
 
+## Migration from better-sqlite3 to mysql for deployement purposes
+
+- Change in @lib/db.ts for mysql
+- Added async/await for database related functions
+
