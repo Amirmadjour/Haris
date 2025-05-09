@@ -4,7 +4,13 @@ import AlertChat from "./chat";
 import Nav from "@/app/components/Nav";
 
 async function getAlert(serial: string) {
-  const res = await fetch(`http://localhost:3000/api/alerts/${serial}`, {
+  // Use relative path for API calls
+  const apiUrl =
+    process.env.NODE_ENV === "production"
+      ? `/api/alerts/${serial}`
+      : `http://localhost:3000/api/alerts/${serial}`;
+
+  const res = await fetch(apiUrl, {
     cache: "no-store",
   });
 
