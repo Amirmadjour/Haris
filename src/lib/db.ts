@@ -13,10 +13,6 @@ const pool = mysql.createPool({
   waitForConnections: true,
   connectionLimit: 10,
   queueLimit: 0,
-   // Add these additional options:
-  port: 3306, // Default MySQL port
-  connectTimeout: 10000, // 10 seconds timeout
-  ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : undefined
 });
 
 // Initialize database
