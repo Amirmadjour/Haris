@@ -24,10 +24,10 @@ export async function GET(request: NextRequest) {
 
   try {
     const room: any = getOrCreateChatRoom(alertSerial);
-    const messages = getChatMessages(room.id);
+    const messages: any = getChatMessages(room.id);
      // Enhance messages with their attachments
     const messagesWithAttachments = messages.map((message: any) => {
-      const attachments = getMessageAttachments(message.id);
+      const attachments: any = getMessageAttachments(message.id);
       return {
         ...message,
         attachments: attachments.map((attachment: any) => ({
@@ -64,7 +64,7 @@ export async function POST(request: NextRequest) {
     }
 
     const room: any = getOrCreateChatRoom(alertSerial);
-    const messageId = addChatMessage(room.id, sender, message, mentions);
+    const messageId = await addChatMessage(room.id, sender, message, mentions);
 
     // Handle file attachments
     const attachments = [];

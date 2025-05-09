@@ -12,7 +12,7 @@ export async function GET(request: Request, { params }: any) {
       return new NextResponse(null, { status: 404 });
     }
 
-    const file = fs.readFileSync(attachment.filepath);
+    const file: any = fs.readFileSync(attachment.filepath);
     const stats = fs.statSync(attachment.filepath);
 
     // Check if the file is an image
