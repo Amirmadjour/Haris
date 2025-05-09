@@ -119,7 +119,7 @@ export async function saveAttachment(roomId: number, messageId: number, file: an
     `INSERT INTO chat_attachments 
     (message_id, room_id, filename, filepath, content_type, size)
     VALUES (?, ?, ?, ?, ?, ?)`,
-    [messageId, roomId, file.name, filePath, file.type, file.size]
+    [messageId, roomId, file.name, fileId, file.type, file.size]
   );
 
   return fileId;

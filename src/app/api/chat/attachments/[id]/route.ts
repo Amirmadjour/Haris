@@ -12,8 +12,19 @@ export async function GET(request: Request, { params }: any) {
       return new NextResponse(null, { status: 404 });
     }
 
-    const file: any = fs.readFileSync(attachment.filepath);
-    const stats = fs.statSync(attachment.filepath);
+    const uploadsDir = path.join(process.cwd(), 'uploads');
+    const fullPath = path.join(uploadsDir, attachment.filepath);
+
+    // 2. Security checks
+    const normalizedPath = path.normalize(fullPath);
+    if (!normalizedPath.startsWith(uploadsDir)) {
+      return new NextResponse("Invalid file path", { status: 403 });
+    }
+
+    console.log("fullpath: ", fullPath)
+
+    const file: any = fs.readFileSync(fullPath);
+    const stats = fs.statSync(fullPath);
 
     // Check if the file is an image
     const isImage = attachment.content_type?.startsWith("image/");

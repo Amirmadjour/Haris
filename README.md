@@ -142,5 +142,5 @@ curl -k -u admin:MadjourAmir1# https://localhost:8089/services/alerts/fired_aler
 ## Migration from better-sqlite3 to mysql for deployement purposes
 
 - Change in @lib/db.ts for mysql
-- Added async/await for database related functions
+- Added async/await for database related functions in routes
 
