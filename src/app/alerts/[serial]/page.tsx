@@ -7,7 +7,7 @@ async function getAlert(serial: string) {
   // Use relative path for API calls
   const apiUrl =
     process.env.NODE_ENV === "production"
-      ? `/api/alerts/${serial}`
+      ? `https://testharis.madjria.com/api/alerts/${serial}`
       : `http://localhost:3000/api/alerts/${serial}`;
 
   const res = await fetch(apiUrl, {
