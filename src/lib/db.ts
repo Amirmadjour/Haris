@@ -1,10 +1,12 @@
 import Database from 'better-sqlite3';
-
-const db = new Database('alerts.db');
 import fs from 'fs';
 import path from 'path';
 
+
 const UPLOAD_DIR = path.join(process.cwd(), 'uploads');
+
+const dbPath = path.join(process.cwd(), 'alerts.db');
+const db = new Database(dbPath);
 
 // Initialize database
 export function initDb() {
