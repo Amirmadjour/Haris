@@ -4,7 +4,7 @@ import axios from "axios";
 import https from "https";
 import { insertAlerts, alertExists } from "@/lib/db";
 
-export const mapSeverity = (level: number): string => {
+const mapSeverity = (level: number): string => {
   const severityMap = {
     1: "Info",
     2: "Low",

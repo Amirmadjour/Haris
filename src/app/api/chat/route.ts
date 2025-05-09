@@ -89,31 +89,3 @@ export async function POST(request: NextRequest) {
     );
   }
 }
-
-export async function GET_attachment(request: NextRequest) {
-  const id = request.nextUrl.searchParams.get("id");
-  if (!id) {
-    return new NextResponse(null, { status: 400 });
-  }
-
-  try {
-    const filePath = path.join(UPLOAD_DIR, id);
-    if (!fs.existsSync(filePath)) {
-      return new NextResponse(null, { status: 404 });
-    }
-
-    const file = fs.readFileSync(filePath);
-    const stats = fs.statSync(filePath);
-
-    return new NextResponse(file, {
-      headers: {
-        "Content-Type": "application/octet-stream",
-        "Content-Disposition": `attachment; filename="${id}"`,
-        "Content-Length": stats.size.toString(),
-      },
-    });
-  } catch (error) {
-    console.error("Error serving attachment:", error);
-    return new NextResponse(null, { status: 500 });
-  }
-}

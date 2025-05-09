@@ -4,10 +4,7 @@ import { getAttachmentInfo } from "@/lib/db";
 import fs from "fs";
 import path from "path";
 
-export async function GET(
-  request: Request,
-  { params }: { params: { id: string } }
-) {
+export async function GET(request: Request, { params }: any) {
   const { id } = params;
   try {
     const attachment: any = getAttachmentInfo(id);

@@ -28,11 +28,12 @@ const getSeverityColor = (severityValue: any) => {
   }
 };
 
-export default async function AlertDetailPage({
-  params,
-}: {
+interface PageProps {
   params: { serial: string };
-}) {
+  searchParams?: { [key: string]: string | string[] | undefined };
+}
+
+export default async function AlertDetailPage({ params }: any) {
   const alert = await getAlert(params.serial);
   console.log("alert: ", alert);
 
@@ -84,7 +85,11 @@ export default async function AlertDetailPage({
         <AlertChat alertSerial={params.serial} />
         <div className="mb-6 max-w-[40%] bg-secondary h-fit p-4 rounded-2xl border border-border">
           <h2 className="text-lg font-semibold mb-2 text-white">Splunk Link</h2>
-          <a href={alert.splunk_link} className="text-blue-600 hover:underline wrap-anywhere" target="_blank">
+          <a
+            href={alert.splunk_link}
+            className="text-blue-600 hover:underline wrap-anywhere"
+            target="_blank"
+          >
             {alert.splunk_link}
           </a>
         </div>
