@@ -84,10 +84,10 @@ export async function initDb() {
     `);
 
     // Create indexes
-    await connection.query('CREATE INDEX idx_serial ON alerts (_serial)');
+    /*await connection.query('CREATE INDEX idx_serial ON alerts (_serial)');
     await connection.query('CREATE INDEX idx_chat_room_alert ON chat_rooms (alert_serial)');
     await connection.query('CREATE INDEX idx_chat_messages_room ON chat_messages (room_id)');
-    await connection.query('CREATE INDEX idx_chat_attachments_message ON chat_attachments (message_id)');
+    await connection.query('CREATE INDEX idx_chat_attachments_message ON chat_attachments (message_id)'); */
 
     // Ensure upload directory exists
     if (!fs.existsSync(UPLOAD_DIR)) {
