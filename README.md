@@ -1,6 +1,4 @@
-Here's the organized README.md file in a format you can download directly. You can copy this entire content and save it as `README.md`:
 
-```markdown
 # Installation Guide
 
 ## ⚠️ CAUTION
@@ -176,5 +174,3 @@ curl -k https://localhost:8088/services/collector \
   - Password
   - Username
   - Splunk host
-
-```
