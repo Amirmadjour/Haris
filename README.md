@@ -46,6 +46,16 @@ pm2 start npm --name "nextjs" -- start
 pm2 start "ngrok http 3000" --name "ngrok"
 ```
 
+## Deploy to cPanel
+
+- Standalone build
+- npm run build
+- copy public and static files to .next
+- zip .next folder
+- push changes to github
+- pull changes on cPanel and unzip .next
+- restart node setup
+
 ## Dev necessities
 
 curl -k https://localhost:8088/services/collector \

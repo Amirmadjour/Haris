@@ -2,6 +2,7 @@
 import { notFound } from "next/navigation";
 import AlertChat from "./chat";
 import Nav from "@/app/components/Nav";
+import { getCurrentUserAction } from "@/app/actions/auth";
 
 async function getAlert(serial: string) {
   // Use relative path for API calls
@@ -41,6 +42,7 @@ interface PageProps {
 
 export default async function AlertDetailPage({ params }: any) {
   const alert = await getAlert(await params.serial);
+  const currentUser = await getCurrentUserAction(); 
   console.log("alert: ", alert);
 
   if (!alert) {
@@ -49,7 +51,7 @@ export default async function AlertDetailPage({ params }: any) {
 
   return (
     <div className="bg-primary flex flex-col items-center justify-start w-screen h-screen overflow-y-scroll px-20">
-      <Nav />
+      <Nav user={currentUser}/>
       <table className="w-full mt-[140px] text-white mb-4 font-poppins">
         <thead>
           <tr className="*:text-xl font-semibold text-left">
@@ -88,7 +90,7 @@ export default async function AlertDetailPage({ params }: any) {
       {/* Or move that logic to the API as well */}
 
       <div className="w-full flex gap-4">
-        <AlertChat alertSerial={alert._serial} />
+        <AlertChat alertSerial={alert._serial} currentUser={currentUser!}/>
         <div className="mb-6 max-w-[40%] bg-secondary h-fit p-4 rounded-2xl border border-border">
           <h2 className="text-lg font-semibold mb-2 text-white">Splunk Link</h2>
           <a

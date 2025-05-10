@@ -1,6 +1,7 @@
 import mysql from "mysql2/promise";
 import fs from "fs";
 import path from "path";
+import bcrypt from "bcryptjs"
 
 const UPLOAD_DIR = path.join(process.cwd(), "uploads");
 
@@ -80,6 +81,17 @@ export async function initDb() {
         id INT AUTO_INCREMENT PRIMARY KEY,
         name VARCHAR(255) NOT NULL UNIQUE,
         email VARCHAR(255) NOT NULL UNIQUE
+      ) ENGINE=InnoDB;
+    `);
+
+    await connection.query(`
+      CREATE TABLE IF NOT EXISTS users (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        username VARCHAR(255) NOT NULL UNIQUE,
+        email VARCHAR(255) NOT NULL UNIQUE,
+        password_hash VARCHAR(255) NOT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        last_login TIMESTAMP NULL
       ) ENGINE=InnoDB;
     `);
 
@@ -255,6 +267,30 @@ export async function addTeamMember(name: string, email: string) {
   await pool.query(
     "INSERT IGNORE INTO team_members (name, email) VALUES (?, ?)",
     [name, email]
+  );
+}
+
+export async function createUser(username: string, email: string, password: string) {
+  const hashedPassword = await bcrypt.hash(password, 10);
+  const [result]: any = await pool.query(
+    `INSERT INTO users (username, email, password_hash) VALUES (?, ?, ?)`,
+    [username, email, hashedPassword]
+  );
+  return result.insertId;
+}
+
+export async function findUserByUsername(username: string) {
+  const [rows]: any = await pool.query(
+    `SELECT * FROM users WHERE username = ?`,
+    [username]
+  );
+  return rows[0] || null;
+}
+
+export async function updateLastLogin(userId: number) {
+  await pool.query(
+    `UPDATE users SET last_login = CURRENT_TIMESTAMP WHERE id = ?`,
+    [userId]
   );
 }
 

@@ -7,7 +7,18 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Video, Phone, EllipsisVertical, Paperclip } from "lucide-react";
 import { toast } from "sonner";
 
-export default function AlertChat({ alertSerial }: { alertSerial: string }) {
+interface AlertChatProps {
+  alertSerial: string;
+  currentUser: {
+    username: string;
+    avatar?: string;
+  };
+}
+
+export default function AlertChat({
+  alertSerial,
+  currentUser,
+}: AlertChatProps) {
   const [messages, setMessages] = useState<any[]>([]);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -41,7 +52,7 @@ export default function AlertChat({ alertSerial }: { alertSerial: string }) {
     try {
       const formData = new FormData();
       formData.append("alertSerial", alertSerial);
-      formData.append("sender", "Current User");
+      formData.append("sender", currentUser.username);
       formData.append("message", message);
       formData.append("mentions", JSON.stringify(mentions));
 
