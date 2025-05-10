@@ -3,6 +3,12 @@
 ## CAUTION
 - There are some absolute paths like for attachements for the frontend whithin chats
 
+### Prequsties
+- smtp server
+- splunk host
+- server ip address
+- ssh credentails
+
 ## 🔧 Step 1: Install Node.js and Git (if needed)
 ```bash
 sudo apt update
