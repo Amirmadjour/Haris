@@ -1,13 +1,15 @@
 import { NextResponse } from "next/server";
-import {
+import pool, {
   addChatMessage,
   getMessageAttachments,
+  getTeamMemberByUsername,
   saveAttachment,
 } from "@/lib/db";
 import { getOrCreateChatRoom, getChatMessages } from "@/lib/db";
 import type { NextRequest } from "next/server";
 import fs from "fs";
 import path from "path";
+import { sendMentionNotification } from "@/lib/email";
 
 const UPLOAD_DIR = path.join(process.cwd(), "uploads");
 
@@ -84,7 +86,7 @@ export async function POST(request: NextRequest) {
     const room: any = await getOrCreateChatRoom(alertSerial);
     const messageId = await addChatMessage(room.id, sender, message, mentions);
 
-    // Handle file attachments
+    // Handle file attachments (existing code remains the same)
     const attachments = [];
     for (const [key, value] of formData.entries()) {
       if (key.startsWith("file-") && value instanceof File) {
@@ -98,6 +100,29 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    // Send email notifications for mentions
+    if (mentions.length > 0) {
+      const alert = await getAlert(alertSerial); // You'll need to implement this
+      const alertLink = `${process.env.NEXT_PUBLIC_BASE_URL}/alerts/${alertSerial}`;
+      
+      for (const username of mentions) {
+        try {
+          const member = await getTeamMemberByUsername(username);
+          if (member && member.email) {
+            await sendMentionNotification(
+              member.email,
+              sender,
+              alert?.search_name || alertSerial,
+              message,
+              alertLink
+            );
+          }
+        } catch (error) {
+          console.error(`Failed to notify ${username}:`, error);
+        }
+      }
+    }
+
     return NextResponse.json({ success: true, attachments });
   } catch (error) {
     console.error("Error in POST:", error);
@@ -106,4 +131,12 @@ export async function POST(request: NextRequest) {
       { status: 500 }
     );
   }
+}
+
+async function getAlert(serial: string) {
+  const [rows]: any = await pool.query(
+    "SELECT search_name FROM alerts WHERE _serial = ?",
+    [serial]
+  );
+  return rows[0] || null;
 }

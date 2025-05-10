@@ -276,6 +276,7 @@ export async function createUser(username: string, email: string, password: stri
     `INSERT INTO users (username, email, password_hash) VALUES (?, ?, ?)`,
     [username, email, hashedPassword]
   );
+  await addTeamMember(username, email)
   return result.insertId;
 }
 
@@ -294,16 +295,18 @@ export async function updateLastLogin(userId: number) {
   );
 }
 
+export async function getTeamMemberByUsername(username: string) {
+  const [rows]: any = await pool.query(
+    "SELECT * FROM team_members WHERE name = ?",
+    [username]
+  );
+  return rows[0] || null;
+}
+
 // Initialize database on startup
 (async () => {
   try {
     await initDb();
-    const members: any = await getTeamMembers();
-    if (members.length === 0) {
-      await addTeamMember("Ahmed", "ahmed@example.com");
-      await addTeamMember("Hassan", "hassan@example.com");
-      await addTeamMember("Faisal Ghamdi", "faisal@example.com");
-    }
   } catch (error) {
     console.error("Database initialization failed:", error);
   }
