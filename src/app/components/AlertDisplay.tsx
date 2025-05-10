@@ -17,13 +17,12 @@ const transformData = (data: any) => {
     },
     statusCounts: {
       Open: data?.filter((r: any) => r.status === "Open").length,
-      Assigned: data?.filter((r: any) => r.status === "Assigned").length,
-      EngineeringReview: data?.filter(
-        (r: any) => r.status === "Engineering Review"
+      UnderEngineeringReview: data?.filter(
+        (r: any) => r.status === "Under Engineering Review"
       ).length,
     },
     caseDetails: data?.map((r: any, index: number) => ({
-      id: r.id,
+      id: r.display_index,
       alert: r.search_name,
       analyst: r.assigned_to || 'No analyst assigned',
       status: r.status,
@@ -228,13 +227,8 @@ export default function SplunkAlertListener() {
               color: "#C4FDFD",
             },
             {
-              label: "Assigned",
-              value: alerts?.statusCounts?.Assigned,
-              color: "#F57960",
-            },
-            {
-              label: "Engineering review",
-              value: alerts?.statusCounts?.EngineeringReview,
+              label: "Under Engineering Review",
+              value: alerts?.statusCounts?.UnderEngineeringReview,
               color: "#FCFFAA",
             },
           ]}

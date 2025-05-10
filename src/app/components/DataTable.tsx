@@ -55,7 +55,7 @@ export const columns = (
   {
     accessorKey: "id",
     header: "ID",
-    cell: ({ row }) => <div>{row.getValue("id")}</div>,
+    cell: ({ row }) => <div>{"100" + row.getValue("id")}</div>,
   },
   {
     accessorKey: "alert",
@@ -95,7 +95,6 @@ export const columns = (
                     className="text-white hover:bg-white/5"
                     onClick={async () => {
                       try {
-                        // Call your API to update the status and analyst
                         const response = await fetch(
                           "/api/alerts/update-status",
                           {
@@ -105,16 +104,15 @@ export const columns = (
                             },
                             body: JSON.stringify({
                               serial: row.original._serial,
-                              status: "Assigned",
+                              status: "Under Engineering Review",
                               assignedTo: member,
                             }),
                           }
                         );
 
                         if (response.ok) {
-                          // Update the local data
                           updateRow(row.original._serial, {
-                            status: "Assigned",
+                            status: "Under Engineering Review",
                             analyst: member,
                           });
                         }
@@ -140,7 +138,7 @@ export const columns = (
   {
     accessorKey: "status",
     header: ({ column }) => {
-      const statuses = ["Open", "Assigned", "Under Engineering review"];
+      const statuses = ["Open", "Under Engineering review"]; // Removed "Assigned"
       const filterValues = (column.getFilterValue() as string[]) || statuses;
 
       return (
@@ -234,7 +232,6 @@ export const columns = (
     },
   },
 ];
-
 
 export function DataTable({ data = [], isLoading = false }) {
   const [tableData, setTableData] = React.useState<Alert[]>(data);

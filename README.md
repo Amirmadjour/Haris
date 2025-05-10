@@ -1,5 +1,8 @@
 # installation
 
+## CAUTION
+- There are some absolute paths like for attachements for the frontend whithin chats
+
 ## 🔧 Step 1: Install Node.js and Git (if needed)
 ```bash
 sudo apt update

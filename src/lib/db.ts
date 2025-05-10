@@ -1,15 +1,15 @@
-import mysql from 'mysql2/promise';
-import fs from 'fs';
-import path from 'path';
+import mysql from "mysql2/promise";
+import fs from "fs";
+import path from "path";
 
-const UPLOAD_DIR = path.join(process.cwd(), 'uploads');
+const UPLOAD_DIR = path.join(process.cwd(), "uploads");
 
 // MySQL connection configuration using your cPanel details
 const pool = mysql.createPool({
-  host: 'eris-shared-g1.dzsecurity.net',
-  user: 'madjri81_amir_haris',
-  password: 'p)c9BsL\'cTW"4Su',
-  database: 'madjri81_haris',
+  host: "eris-shared-g1.dzsecurity.net",
+  user: "madjri81_amir_haris",
+  password: "p)c9BsL'cTW\"4Su",
+  database: "madjri81_haris",
   waitForConnections: true,
   connectionLimit: 10,
   queueLimit: 0,
@@ -98,7 +98,12 @@ export async function initDb() {
   }
 }
 
-export async function addChatMessage(roomId: number, sender: string, message: string, mentions: string[] = []) {
+export async function addChatMessage(
+  roomId: number,
+  sender: string,
+  message: string,
+  mentions: string[] = []
+) {
   const [result]: any = await pool.query(
     `INSERT INTO chat_messages (room_id, sender, message, mentions) VALUES (?, ?, ?, ?)`,
     [roomId, sender, message, JSON.stringify(mentions)]
@@ -106,10 +111,14 @@ export async function addChatMessage(roomId: number, sender: string, message: st
   return result.insertId;
 }
 
-export async function saveAttachment(roomId: number, messageId: number, file: any) {
+export async function saveAttachment(
+  roomId: number,
+  messageId: number,
+  file: any
+) {
   const fileId = `${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
   const filePath = path.join(UPLOAD_DIR, fileId);
-  
+
   // Write file to disk
   const buffer = Buffer.from(await file.arrayBuffer());
   fs.writeFileSync(filePath, buffer);
@@ -157,7 +166,7 @@ export async function insertAlerts(alerts: any[]) {
   const connection = await pool.getConnection();
   try {
     await connection.beginTransaction();
-    
+
     for (const alert of alerts) {
       if (!(await alertExists(alert._serial))) {
         await connection.query(
@@ -171,12 +180,12 @@ export async function insertAlerts(alerts: any[]) {
             alert.severity,
             alert.status,
             alert.trigger_time,
-            alert.splunk_link
+            alert.splunk_link,
           ]
         );
       }
     }
-    
+
     await connection.commit();
   } catch (error) {
     await connection.rollback();
@@ -186,7 +195,11 @@ export async function insertAlerts(alerts: any[]) {
   }
 }
 
-export async function updateAlertStatus(serial: string, status: string, assignedTo: string) {
+export async function updateAlertStatus(
+  serial: string,
+  status: string,
+  assignedTo: string
+) {
   await pool.query(
     `UPDATE alerts 
     SET status = ?, assigned_to = ?, updated_at = CURRENT_TIMESTAMP
@@ -196,24 +209,30 @@ export async function updateAlertStatus(serial: string, status: string, assigned
 }
 
 export async function getAlerts() {
-  const [rows] = await pool.query('SELECT * FROM alerts ORDER BY trigger_time DESC');
+  const [rows] = await pool.query(`
+      SELECT 
+        a.*,
+        (SELECT COUNT(*) FROM alerts) - ROW_NUMBER() OVER (ORDER BY trigger_time DESC) + 1 as display_index
+      FROM alerts a
+      ORDER BY trigger_time DESC
+    `);
   return rows;
 }
 
 export async function getOrCreateChatRoom(alertSerial: string) {
   const [rows]: any = await pool.query(
-    'SELECT id FROM chat_rooms WHERE alert_serial = ?',
+    "SELECT id FROM chat_rooms WHERE alert_serial = ?",
     [alertSerial]
   );
-  
+
   if (rows.length === 0) {
     const [result]: any = await pool.query(
-      'INSERT INTO chat_rooms (alert_serial) VALUES (?)',
+      "INSERT INTO chat_rooms (alert_serial) VALUES (?)",
       [alertSerial]
     );
     return { id: result.insertId };
   }
-  
+
   return rows[0];
 }
 
@@ -228,13 +247,13 @@ export async function getChatMessages(roomId: number) {
 }
 
 export async function getTeamMembers() {
-  const [rows] = await pool.query('SELECT * FROM team_members ORDER BY name');
+  const [rows] = await pool.query("SELECT * FROM team_members ORDER BY name");
   return rows;
 }
 
 export async function addTeamMember(name: string, email: string) {
   await pool.query(
-    'INSERT IGNORE INTO team_members (name, email) VALUES (?, ?)',
+    "INSERT IGNORE INTO team_members (name, email) VALUES (?, ?)",
     [name, email]
   );
 }
@@ -245,12 +264,12 @@ export async function addTeamMember(name: string, email: string) {
     await initDb();
     const members: any = await getTeamMembers();
     if (members.length === 0) {
-      await addTeamMember('Ahmed', 'ahmed@example.com');
-      await addTeamMember('Hassan', 'hassan@example.com');
-      await addTeamMember('Faisal Ghamdi', 'faisal@example.com');
+      await addTeamMember("Ahmed", "ahmed@example.com");
+      await addTeamMember("Hassan", "hassan@example.com");
+      await addTeamMember("Faisal Ghamdi", "faisal@example.com");
     }
   } catch (error) {
-    console.error('Database initialization failed:', error);
+    console.error("Database initialization failed:", error);
   }
 })();
 
