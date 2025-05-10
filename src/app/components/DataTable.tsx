@@ -1,4 +1,5 @@
 "use client";
+"use client";
 
 import * as React from "react";
 import {
@@ -64,12 +65,82 @@ export const columns = (
   {
     accessorKey: "analyst",
     header: () => <div>Analyst</div>,
-    cell: ({ row }) => <div>{row.getValue("analyst")}</div>,
+    cell: ({ row }) => {
+      const currentStatus = row.getValue("status") as string;
+      const currentAnalyst = row.getValue("analyst") as string;
+
+      return (
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <div className="flex items-center gap-1 cursor-pointer">
+              {currentAnalyst || "Unassigned"}
+              {currentStatus === "Open" && (
+                <ChevronDown className="text-white" size={16} />
+              )}
+            </div>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent
+            align="start"
+            className="bg-secondary border-gray-dark"
+          >
+            {currentStatus === "Open" ? (
+              <>
+                <DropdownMenuLabel className="text-white">
+                  Assign to
+                </DropdownMenuLabel>
+                <DropdownMenuSeparator className="bg-gray-dark" />
+                {TEAM_MEMBERS.map((member) => (
+                  <DropdownMenuItem
+                    key={member}
+                    className="text-white hover:bg-white/5"
+                    onClick={async () => {
+                      try {
+                        // Call your API to update the status and analyst
+                        const response = await fetch(
+                          "/api/alerts/update-status",
+                          {
+                            method: "POST",
+                            headers: {
+                              "Content-Type": "application/json",
+                            },
+                            body: JSON.stringify({
+                              serial: row.original._serial,
+                              status: "Assigned",
+                              assignedTo: member,
+                            }),
+                          }
+                        );
+
+                        if (response.ok) {
+                          // Update the local data
+                          updateRow(row.original._serial, {
+                            status: "Assigned",
+                            analyst: member,
+                          });
+                        }
+                      } catch (error) {
+                        console.error("Failed to update status:", error);
+                      }
+                    }}
+                  >
+                    {member}
+                  </DropdownMenuItem>
+                ))}
+              </>
+            ) : (
+              <DropdownMenuItem className="text-white pointer-events-none">
+                {currentAnalyst || "No analyst assigned"}
+              </DropdownMenuItem>
+            )}
+          </DropdownMenuContent>
+        </DropdownMenu>
+      );
+    },
   },
   {
     accessorKey: "status",
     header: ({ column }) => {
-      const statuses = ["Open", "Assigned", "Engineering review"];
+      const statuses = ["Open", "Assigned", "Under Engineering review"];
       const filterValues = (column.getFilterValue() as string[]) || statuses;
 
       return (
@@ -109,80 +180,7 @@ export const columns = (
         </DropdownMenu>
       );
     },
-    cell: ({ row }) => {
-      const currentStatus = row.getValue("status") as string;
-      const currentAnalyst = row.getValue("analyst") as string;
-
-      return (
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <div className="flex items-center gap-1 cursor-pointer">
-              {currentStatus}
-              {currentStatus === "Open" && (
-                <ChevronDown className="text-white" size={16} />
-              )}
-            </div>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent
-            align="start"
-            className="bg-secondary border-gray-dark"
-          >
-            {currentStatus === "Open" ? (
-              <>
-                <DropdownMenuLabel className="text-white">
-                  Assign to
-                </DropdownMenuLabel>
-                <DropdownMenuSeparator className="bg-gray-dark" />
-                {TEAM_MEMBERS.map((member) => (
-                  <DropdownMenuItem
-                    key={member}
-                    className="text-white hover:bg-white/5"
-                    onClick={async () => {
-                      try {
-                        // Call your API to update the status
-                        const response = await fetch(
-                          "/api/alerts/update-status",
-                          {
-                            method: "POST",
-                            headers: {
-                              "Content-Type": "application/json",
-                            },
-                            body: JSON.stringify({
-                              serial: row.original._serial,
-                              status: "Assigned",
-                              assignedTo: member,
-                            }),
-                          }
-                        );
-
-                        if (response.ok) {
-                          console.log("updating local with", member);
-                          // Update the local data if needed
-                          updateRow(row.original._serial, {
-                            status: "Assigned",
-                            analyst: member,
-                          });
-
-                          console.log(row.original);
-                        }
-                      } catch (error) {
-                        console.error("Failed to update status:", error);
-                      }
-                    }}
-                  >
-                    {member}
-                  </DropdownMenuItem>
-                ))}
-              </>
-            ) : (
-              <DropdownMenuItem className="text-white pointer-events-none">
-                {currentAnalyst || "No analyst assigned"}
-              </DropdownMenuItem>
-            )}
-          </DropdownMenuContent>
-        </DropdownMenu>
-      );
-    },
+    cell: ({ row }) => <div>{row.getValue("status")}</div>,
     filterFn: (row, columnId, filterValues: string[]) => {
       return filterValues.includes(row.getValue(columnId));
     },
@@ -236,6 +234,7 @@ export const columns = (
     },
   },
 ];
+
 
 export function DataTable({ data = [], isLoading = false }) {
   const [tableData, setTableData] = React.useState<Alert[]>(data);
