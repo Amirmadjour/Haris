@@ -3,6 +3,15 @@ import { notFound } from "next/navigation";
 import AlertChat from "./chat";
 import Nav from "@/app/components/Nav";
 import { getCurrentUserAction } from "@/app/actions/auth";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { ChevronDown } from "lucide-react";
 
 async function getAlert(serial: string) {
   // Use relative path for API calls
@@ -18,6 +27,21 @@ async function getAlert(serial: string) {
   if (!res.ok) return null;
   return res.json();
 }
+
+async function getTeamMembers() {
+  const apiUrl =
+    process.env.NODE_ENV === "production"
+      ? `https://testharis.madjria.com/api/team-members`
+      : `http://localhost:3000/api/team-members`;
+
+  const res = await fetch(apiUrl, {
+    cache: "no-store",
+  });
+
+  if (!res.ok) return [];
+  return res.json();
+}
+
 const getSeverityColor = (severityValue: any) => {
   switch (severityValue) {
     case "Critical":
@@ -41,9 +65,9 @@ interface PageProps {
 }
 
 export default async function AlertDetailPage({ params }: any) {
-  const alert = await getAlert(await params.serial);
-  const currentUser = await getCurrentUserAction(); 
-  console.log("alert: ", alert);
+  const alert = await getAlert(params.serial);
+  const currentUser = await getCurrentUserAction();
+  const teamMembers = await getTeamMembers();
 
   if (!alert) {
     return notFound();
@@ -51,7 +75,7 @@ export default async function AlertDetailPage({ params }: any) {
 
   return (
     <div className="bg-primary flex flex-col items-center justify-start w-screen h-screen overflow-y-scroll px-20">
-      <Nav user={currentUser}/>
+      <Nav user={currentUser} />
       <table className="w-full mt-[140px] text-white mb-4 font-poppins">
         <thead>
           <tr className="*:text-xl font-semibold text-left">
@@ -71,7 +95,73 @@ export default async function AlertDetailPage({ params }: any) {
           <tr className="text-left">
             <td className="py-3">{alert.display_index}</td>
             <td className="py-3">{alert.search_name}</td>
-            <td className="py-3">{alert.assigned_to || "Unassigned"}</td>
+            <td className="py-3">
+              {alert.status === "Open" ? (
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <div className="flex items-center gap-1 cursor-pointer">
+                      {alert.assigned_to || "Unassigned"}
+                      <ChevronDown className="text-white" size={16} />
+                    </div>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent
+                    align="start"
+                    className="bg-secondary border-gray-dark"
+                  >
+                    <DropdownMenuLabel className="text-white">
+                      Assign to
+                    </DropdownMenuLabel>
+                    <DropdownMenuSeparator className="bg-gray-dark" />
+                    {teamMembers.map((member: any) => (
+                      <form
+                        key={member.name}
+                        action={async () => {
+                          "use server";
+                          try {
+                            const response = await fetch(
+                              `${
+                                process.env.NODE_ENV === "production"
+                                  ? "https://testharis.madjria.com"
+                                  : "http://localhost:3000"
+                              }/api/alerts/update-status`,
+                              {
+                                method: "POST",
+                                headers: {
+                                  "Content-Type": "application/json",
+                                },
+                                body: JSON.stringify({
+                                  serial: alert._serial,
+                                  status: "Under Engineering Review",
+                                  assignedTo: member.name,
+                                }),
+                              }
+                            );
+                            if (!response.ok) {
+                              throw new Error("Failed to update status");
+                            }
+                          } catch (error) {
+                            console.error("Failed to update status:", error);
+                          }
+                        }}
+                      >
+                        <DropdownMenuItem
+                          className="text-white hover:bg-white/5"
+                          asChild
+                        >
+                          <button type="submit" className="w-full text-left">
+                            {member.name}
+                          </button>
+                        </DropdownMenuItem>
+                      </form>
+                    ))}
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              ) : (
+                <div className="flex items-center gap-1">
+                  {alert.assigned_to || "No analyst assigned"}
+                </div>
+              )}
+            </td>
             <td className="py-3">{alert.status}</td>
             <td className="py-3">
               <div
@@ -86,11 +176,8 @@ export default async function AlertDetailPage({ params }: any) {
         </tbody>
       </table>
 
-      {/* Optionally fetch getTeamMembers() server-side similarly */}
-      {/* Or move that logic to the API as well */}
-
       <div className="w-full flex gap-4">
-        <AlertChat alertSerial={alert._serial} currentUser={currentUser!}/>
+        <AlertChat alertSerial={alert._serial} currentUser={currentUser!} />
         <div className="mb-6 max-w-[40%] bg-secondary h-fit p-4 rounded-2xl border border-border">
           <h2 className="text-lg font-semibold mb-2 text-white">Splunk Link</h2>
           <a
