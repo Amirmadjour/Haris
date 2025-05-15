@@ -154,15 +154,15 @@ export const columns = (
                             },
                             body: JSON.stringify({
                               serial: row.original._serial,
-                              status: "Under Engineering Review",
-                              assignedTo: member,
+                              status: "Assigned",
+                              assignedTo: member.name,
                             }),
                           }
                         );
 
                         if (response.ok) {
                           updateRow(row.original._serial, {
-                            status: "Under Engineering Review",
+                            status: "Assigned",
                             analyst: member.name,
                           });
                         }
@@ -468,7 +468,7 @@ export function DataTable({ data = [], isLoading = false }) {
             ) : (
               <TableRow className="hover:bg-white/5">
                 <TableCell
-                  colSpan={columns.length}
+                  colSpan={5}
                   className="h-24 text-center text-white"
                 >
                   No results.

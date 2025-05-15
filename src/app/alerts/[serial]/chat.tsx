@@ -40,10 +40,6 @@ export default function AlertChat({
     return () => clearInterval(interval);
   }, [alertSerial]);
 
-  useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
-
   const handleSendMessage = async (
     message: string,
     mentions: string[] = [],

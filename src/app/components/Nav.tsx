@@ -16,6 +16,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
+import Link from "next/link";
 
 export default function Nav({ user }: { user: any }) {
   const router = useRouter();
@@ -27,10 +28,10 @@ export default function Nav({ user }: { user: any }) {
 
   return (
     <div className="fixed z-50 bg-secondary flex items-center justify-between h-[140px] w-full px-20 shrink-0">
-      <div className="flex gap-4 items-center justify-center">
+      <Link href="/" className="flex gap-4 items-center justify-center">
         <Image src="/logoHaris.svg" alt="Logo" width={87} height={87} />
         <Image src="/haris.svg" alt="company name" width={152} height={75} />
-      </div>
+      </Link>
       <div className="flex items-center justify-center gap-8">
         <AlertDialog>
           <AlertDialogTrigger asChild>

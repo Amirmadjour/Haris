@@ -1,48 +1,31 @@
-// app/alerts/[serial]/page.tsx
 import { notFound } from "next/navigation";
 import AlertChat from "./chat";
 import Nav from "@/app/components/Nav";
 import { getCurrentUserAction } from "@/app/actions/auth";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { ChevronDown } from "lucide-react";
+import api from "@/lib/axios";
+import { AnalystDropdown } from "@/app/components/AnalystDropDown";
 
 async function getAlert(serial: string) {
-  // Use relative path for API calls
-  const apiUrl =
-    process.env.NODE_ENV === "production"
-      ? `https://testharis.madjria.com/api/alerts/${serial}`
-      : `http://localhost:3000/api/alerts/${serial}`;
-
-  const res = await fetch(apiUrl, {
-    cache: "no-store",
-  });
-
-  if (!res.ok) return null;
-  return res.json();
+  try {
+    const response = await api.get(`/alerts/${serial}`);
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching alert:", error);
+    return null;
+  }
 }
 
 async function getTeamMembers() {
-  const apiUrl =
-    process.env.NODE_ENV === "production"
-      ? `https://testharis.madjria.com/api/team-members`
-      : `http://localhost:3000/api/team-members`;
-
-  const res = await fetch(apiUrl, {
-    cache: "no-store",
-  });
-
-  if (!res.ok) return [];
-  return res.json();
+  try {
+    const response = await api.get("/team-members");
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching team members:", error);
+    return [];
+  }
 }
 
-const getSeverityColor = (severityValue: any) => {
+const getSeverityColor = (severityValue: string) => {
   switch (severityValue) {
     case "Critical":
       return "bg-red-500";
@@ -59,12 +42,7 @@ const getSeverityColor = (severityValue: any) => {
   }
 };
 
-interface PageProps {
-  params: { serial: string };
-  searchParams?: { [key: string]: string | string[] | undefined };
-}
-
-export default async function AlertDetailPage({ params }: any) {
+export default async function AlertDetailPage({ params }: { params: { serial: string } }) {
   const alert = await getAlert(params.serial);
   const currentUser = await getCurrentUserAction();
   const teamMembers = await getTeamMembers();
@@ -96,71 +74,12 @@ export default async function AlertDetailPage({ params }: any) {
             <td className="py-3">{alert.display_index}</td>
             <td className="py-3">{alert.search_name}</td>
             <td className="py-3">
-              {alert.status === "Open" ? (
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <div className="flex items-center gap-1 cursor-pointer">
-                      {alert.assigned_to || "Unassigned"}
-                      <ChevronDown className="text-white" size={16} />
-                    </div>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent
-                    align="start"
-                    className="bg-secondary border-gray-dark"
-                  >
-                    <DropdownMenuLabel className="text-white">
-                      Assign to
-                    </DropdownMenuLabel>
-                    <DropdownMenuSeparator className="bg-gray-dark" />
-                    {teamMembers.map((member: any) => (
-                      <form
-                        key={member.name}
-                        action={async () => {
-                          "use server";
-                          try {
-                            const response = await fetch(
-                              `${
-                                process.env.NODE_ENV === "production"
-                                  ? "https://testharis.madjria.com"
-                                  : "http://localhost:3000"
-                              }/api/alerts/update-status`,
-                              {
-                                method: "POST",
-                                headers: {
-                                  "Content-Type": "application/json",
-                                },
-                                body: JSON.stringify({
-                                  serial: alert._serial,
-                                  status: "Under Engineering Review",
-                                  assignedTo: member.name,
-                                }),
-                              }
-                            );
-                            if (!response.ok) {
-                              throw new Error("Failed to update status");
-                            }
-                          } catch (error) {
-                            console.error("Failed to update status:", error);
-                          }
-                        }}
-                      >
-                        <DropdownMenuItem
-                          className="text-white hover:bg-white/5"
-                          asChild
-                        >
-                          <button type="submit" className="w-full text-left">
-                            {member.name}
-                          </button>
-                        </DropdownMenuItem>
-                      </form>
-                    ))}
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              ) : (
-                <div className="flex items-center gap-1">
-                  {alert.assigned_to || "No analyst assigned"}
-                </div>
-              )}
+              <AnalystDropdown
+                currentAnalyst={alert.assigned_to}
+                teamMembers={teamMembers}
+                alertSerial={alert._serial}
+                status={alert.status}
+              />
             </td>
             <td className="py-3">{alert.status}</td>
             <td className="py-3">
