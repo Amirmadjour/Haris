@@ -4,6 +4,8 @@ import Nav from "@/app/components/Nav";
 import { getCurrentUserAction } from "@/app/actions/auth";
 import api from "@/lib/axios";
 import { AnalystDropdown } from "@/app/components/AnalystDropDown";
+import { StatusDropdown } from "@/app/components/StatusDropDown";
+import { SeverityDropdown } from "@/app/components/SeverityDropDown";
 
 async function getAlert(serial: string) {
   try {
@@ -42,7 +44,11 @@ const getSeverityColor = (severityValue: string) => {
   }
 };
 
-export default async function AlertDetailPage({ params }: { params: { serial: string } }) {
+export default async function AlertDetailPage({
+  params,
+}: {
+  params: { serial: string };
+}) {
   const alert = await getAlert(params.serial);
   const currentUser = await getCurrentUserAction();
   const teamMembers = await getTeamMembers();
@@ -81,14 +87,23 @@ export default async function AlertDetailPage({ params }: { params: { serial: st
                 status={alert.status}
               />
             </td>
-            <td className="py-3">{alert.status}</td>
+            <td className="py-3">
+              <StatusDropdown
+                currentStatus={alert.status}
+                alertSerial={alert._serial}
+                memberName={alert.assigned_to}
+              />
+            </td>
             <td className="py-3">
               <div
                 className={`${getSeverityColor(
                   alert.severity
                 )} w-fit h-fit p-2 rounded-md`}
               >
-                {alert.severity}
+                <SeverityDropdown
+                  currentSeverity={alert.severity}
+                  alertSerial={alert._serial}
+                />
               </div>
             </td>
           </tr>

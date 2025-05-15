@@ -10,7 +10,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { ChevronDown } from "lucide-react";
 import { useTransition } from "react";
-import { assignAnalyst } from "@/app/actions/alerts";
+import { updateAlertStatus } from "@/app/actions/alerts";
 
 export function AnalystDropdown({
   currentAnalyst,
@@ -27,7 +27,7 @@ export function AnalystDropdown({
 
   const handleAssign = (memberName: string) => {
     startTransition(async () => {
-      await assignAnalyst(alertSerial, memberName);
+      await updateAlertStatus(alertSerial, memberName);
     });
   };
 
