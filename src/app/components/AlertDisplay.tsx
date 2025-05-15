@@ -17,6 +17,7 @@ const transformData = (data: any) => {
     },
     statusCounts: {
       Open: data?.filter((r: any) => r.status === "Open").length,
+      Assigned: data?.filter((r: any) => r.status === "Assigned").length,
       UnderEngineeringReview: data?.filter(
         (r: any) => r.status === "Under Engineering Review"
       ).length,
@@ -24,10 +25,10 @@ const transformData = (data: any) => {
     caseDetails: data?.map((r: any, index: number) => ({
       id: r.display_index,
       alert: r.search_name,
-      analyst: r.assigned_to || 'No analyst assigned',
+      analyst: r.assigned_to || "No analyst assigned",
       status: r.status,
       severity: r.severity,
-      _serial: r._serial
+      _serial: r._serial,
     })),
   };
 };
@@ -44,7 +45,7 @@ export default function SplunkAlertListener() {
     try {
       const res = await fetch("/api/history-alerts");
       const data = await res.json();
-      console.log("Data: ", data)
+      console.log("Data: ", data);
 
       const alertsResponse = await fetch("/api/alerts/list");
       const alertsList = await alertsResponse.json();
@@ -90,7 +91,6 @@ export default function SplunkAlertListener() {
       console.error("Service Worker registration failed:", error);
     }
   };
-
 
   const showPushNotification = (alert: SplunkAlert) => {
     if (!isPushEnabled) return;
@@ -187,7 +187,7 @@ export default function SplunkAlertListener() {
         </div>
       </div>
 
-      <div className="px-20 w-full flex items-center justify-center gap-4">
+      <div className="px-20 w-full flex items-center justify-center gap-4 h-auto">
         <StatisticCard
           title="Severity"
           items={[
@@ -227,6 +227,10 @@ export default function SplunkAlertListener() {
               color: "#C4FDFD",
             },
             {
+              label: "Assigned",
+              value: alerts?.statusCounts?.Assigned,
+            },
+            {
               label: "Under Engineering Review",
               value: alerts?.statusCounts?.UnderEngineeringReview,
               color: "#FCFFAA",
@@ -234,7 +238,7 @@ export default function SplunkAlertListener() {
           ]}
         />
       </div>
-      <DataTable data={alerts?.caseDetails} isLoading={isLoadingHistory}/>
+      <DataTable data={alerts?.caseDetails} isLoading={isLoadingHistory} />
     </div>
   );
 }

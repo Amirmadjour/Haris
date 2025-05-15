@@ -75,7 +75,7 @@ const StatisticCard: React.FC<StatisticCardProps> = ({
 
   return (
     <div
-      className={`w-full flex flex-col bg-secondary rounded-lg shadow p-6 font-poppins items-center ${className}`}
+      className={`w-full flex flex-col bg-secondary rounded-lg shadow p-6 font-poppins items-center h-full ${className}`}
     >
       {title && (
         <h3 className="text-lg font-medium text-white mb-4">{title}</h3>
@@ -83,7 +83,7 @@ const StatisticCard: React.FC<StatisticCardProps> = ({
 
       <div className="w-full flex flex-col md:flex-row items-center justify-between gap-6">
         {showChart && items.length > 0 && (
-          <div className="w-[140px]">
+          <div className="h-[180px] w-[180px]">
             <Doughnut data={chartData} options={chartOptions} />
           </div>
         )}
