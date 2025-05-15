@@ -117,14 +117,18 @@ export const columns = (
 
       return (
         <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <div className="flex items-center gap-1 cursor-pointer">
-              {currentAnalyst || "Unassigned"}
-              {currentStatus === "Open" && (
+          {currentStatus == "Open" ? (
+            <DropdownMenuTrigger asChild>
+              <div className="flex items-center gap-1 cursor-pointer">
+                Unassigned
                 <ChevronDown className="text-white" size={16} />
-              )}
+              </div>
+            </DropdownMenuTrigger>
+          ) : (
+            <div className="flex items-center gap-1">
+              {currentAnalyst}
             </div>
-          </DropdownMenuTrigger>
+          )}
           <DropdownMenuContent
             align="start"
             className="bg-secondary border-gray-dark"

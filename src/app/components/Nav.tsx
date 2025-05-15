@@ -36,7 +36,7 @@ export default function Nav({ user }: { user: any }) {
           <AlertDialogTrigger asChild>
             <Button
               variant="destructive"
-              className="flex items-center justify-center gap-2"
+              className="flex items-center justify-center gap-2 cursor-pointer"
             >
               <LogOut className="h-4 w-4" />
               Logout
@@ -44,16 +44,20 @@ export default function Nav({ user }: { user: any }) {
           </AlertDialogTrigger>
           <AlertDialogContent>
             <AlertDialogHeader>
-              <AlertDialogTitle>Are you sure you want to logout?</AlertDialogTitle>
+              <AlertDialogTitle>
+                Are you sure you want to logout?
+              </AlertDialogTitle>
               <AlertDialogDescription>
                 You will need to sign in again to access your account.
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
-              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogCancel className="cursor-pointer">
+                Cancel
+              </AlertDialogCancel>
               <AlertDialogAction
                 onClick={handleLogout}
-                className="bg-destructive hover:bg-destructive/90"
+                className="bg-destructive hover:bg-destructive/90 cursor-pointer"
               >
                 Logout
               </AlertDialogAction>
@@ -61,7 +65,7 @@ export default function Nav({ user }: { user: any }) {
           </AlertDialogContent>
         </AlertDialog>
 
-        <div className="flex items-center justify-center gap-2 rounded-full hover:bg-white/5 p-1.5 cursor-pointer transition-all duration-200 ease-in-out">
+        <div className="flex items-center justify-center gap-2 rounded-full hover:bg-white/5 p-1.5 transition-all duration-200 ease-in-out">
           <div className="flex items-center justify-center bg-[#4C4C4C] rounded-full p-1.5">
             <Image
               src="/user.svg"
