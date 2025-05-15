@@ -125,9 +125,7 @@ export const columns = (
               </div>
             </DropdownMenuTrigger>
           ) : (
-            <div className="flex items-center gap-1">
-              {currentAnalyst}
-            </div>
+            <div className="flex items-center gap-1">{currentAnalyst}</div>
           )}
           <DropdownMenuContent
             align="start"
@@ -358,16 +356,12 @@ export function DataTable({ data = [], isLoading = false }) {
 
   return (
     <div className="w-full px-20">
-      <div className="flex items-center py-4 gap-4">
-        <Input
-          placeholder="Search by alert name or ID..."
-          value={globalFilter ?? ""}
-          onChange={(event) => setGlobalFilter(event.target.value)}
-          className="max-w-sm bg-secondary border-gray-dark text-white"
-        />
-      </div>
       <div className="border-b border-gray-dark">
-        <DataTablePagination table={table} />
+        <DataTablePagination
+          table={table}
+          globalFilter={globalFilter}
+          setGlobalFilter={setGlobalFilter}
+        />
         <Table>
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (
@@ -467,10 +461,7 @@ export function DataTable({ data = [], isLoading = false }) {
               })
             ) : (
               <TableRow className="hover:bg-white/5">
-                <TableCell
-                  colSpan={5}
-                  className="h-24 text-center text-white"
-                >
+                <TableCell colSpan={5} className="h-24 text-center text-white">
                   No results.
                 </TableCell>
               </TableRow>
