@@ -70,7 +70,47 @@ export const columns = (
   },
   {
     accessorKey: "analyst",
-    header: () => <div>Analyst</div>,
+    header: ({ column }) => {
+      return (
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <div className="flex items-center gap-1 cursor-pointer">
+              Analyst
+              <ChevronDown className="text-white" size={20} />
+            </div>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent
+            align="center"
+            className="bg-secondary border-gray-dark"
+          >
+            <div className="absolute -top-1.5 left-1/2 transform -translate-x-1/2">
+              <div className="w-3 h-3 bg-secondary rotate-45 border-t border-l border-gray-dark" />
+            </div>
+            <DropdownMenuCheckboxItem
+              className="font-medium text-white hover:bg-white/5 font-poppins"
+              checked={!column.getFilterValue()}
+              onSelect={(e) => e.preventDefault()}
+              onCheckedChange={() => column.setFilterValue(undefined)}
+            >
+              All Analysts
+            </DropdownMenuCheckboxItem>
+            {teamMembers.map((member) => (
+              <DropdownMenuCheckboxItem
+                key={member.name}
+                checked={column.getFilterValue() === member.name}
+                onSelect={(e) => e.preventDefault()}
+                onCheckedChange={(checked) => {
+                  column.setFilterValue(checked ? member.name : undefined);
+                }}
+                className="font-medium text-white hover:bg-white/5 font-poppins"
+              >
+                {member.name}
+              </DropdownMenuCheckboxItem>
+            ))}
+          </DropdownMenuContent>
+        </DropdownMenu>
+      );
+    },
     cell: ({ row }) => {
       const currentStatus = row.getValue("status") as string;
       const currentAnalyst = row.getValue("analyst") as string;
@@ -139,6 +179,10 @@ export const columns = (
           </DropdownMenuContent>
         </DropdownMenu>
       );
+    },
+    filterFn: (row, columnId, filterValue) => {
+      if (!filterValue) return true;
+      return row.getValue(columnId) === filterValue;
     },
   },
   {

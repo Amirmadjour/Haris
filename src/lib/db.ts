@@ -276,11 +276,12 @@ export async function createUser(
   password: string
 ) {
   const hashedPassword = await bcrypt.hash(password, 10);
+  const capitalizedName = username.charAt(0).toUpperCase() + username.slice(1).toLowerCase();
   const [result]: any = await pool.query(
     `INSERT INTO users (username, email, password_hash) VALUES (?, ?, ?)`,
-    [username, email, hashedPassword]
+    [capitalizedName, email, hashedPassword]
   );
-  await addTeamMember(username, email);
+  await addTeamMember(capitalizedName, email);
   return result.insertId;
 }
 

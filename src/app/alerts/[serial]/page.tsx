@@ -69,7 +69,7 @@ export default async function AlertDetailPage({ params }: any) {
         </thead>
         <tbody>
           <tr className="text-left">
-            <td className="py-3">{alert.id}</td>
+            <td className="py-3">{alert.display_index}</td>
             <td className="py-3">{alert.search_name}</td>
             <td className="py-3">{alert.assigned_to || "Unassigned"}</td>
             <td className="py-3">{alert.status}</td>

@@ -5,15 +5,16 @@ export async function GET(req: Request, { params }: any) {
   try {
     // MySQL version - using connection pool
     const [rows]: any = await db.query(
-      "SELECT * FROM alerts WHERE _serial = ?",
+      `SELECT 
+        a.*,
+        CONCAT('100', (SELECT COUNT(*) FROM alerts) - ROW_NUMBER() OVER (ORDER BY trigger_time DESC) + 1) as display_index
+      FROM alerts a
+      WHERE _serial = ?`,
       [params.serial]
     );
 
     if (!rows || rows.length === 0) {
-      return NextResponse.json(
-        { error: "Alert not found" },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: "Alert not found" }, { status: 404 });
     }
 
     return NextResponse.json(rows[0]);
