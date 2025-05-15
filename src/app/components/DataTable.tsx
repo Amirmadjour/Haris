@@ -1,5 +1,4 @@
 "use client";
-"use client";
 
 import * as React from "react";
 import {
@@ -42,20 +41,27 @@ import { DataTablePagination } from "./DataTablePagination";
 import { Alert } from "@/lib/splunkAlerts";
 import { useRouter } from "next/navigation";
 
-const TEAM_MEMBERS = [
-  "Madjour amir",
-  "radhi badache",
-  "Amine chell",
-  "Faisal Ghamdi",
-];
+// Remove the hardcoded TEAM_MEMBERS and fetch them instead
+const fetchTeamMembers = async () => {
+  try {
+    const response = await fetch("/api/team-members");
+    const data = await response.json();
+    console.log("data as members: ", data);
+    return data || [];
+  } catch (error) {
+    console.error("Failed to fetch team members:", error);
+    return [];
+  }
+};
 
 export const columns = (
-  updateRow: (serial: string, updates: Partial<Alert>) => void
+  updateRow: (serial: string, updates: Partial<Alert>) => void,
+  teamMembers: any[] // Add teamMembers as parameter
 ): ColumnDef<Alert>[] => [
   {
     accessorKey: "id",
     header: "ID",
-    cell: ({ row }) => <div>{"100" + row.getValue("id")}</div>,
+    cell: ({ row }) => <div>{row.getValue("id")}</div>,
   },
   {
     accessorKey: "alert",
@@ -89,9 +95,9 @@ export const columns = (
                   Assign to
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator className="bg-gray-dark" />
-                {TEAM_MEMBERS.map((member) => (
+                {teamMembers.map((member, index) => (
                   <DropdownMenuItem
-                    key={member}
+                    key={index}
                     className="text-white hover:bg-white/5"
                     onClick={async () => {
                       try {
@@ -113,7 +119,7 @@ export const columns = (
                         if (response.ok) {
                           updateRow(row.original._serial, {
                             status: "Under Engineering Review",
-                            analyst: member,
+                            analyst: member.name,
                           });
                         }
                       } catch (error) {
@@ -121,7 +127,7 @@ export const columns = (
                       }
                     }}
                   >
-                    {member}
+                    {member.name}
                   </DropdownMenuItem>
                 ))}
               </>
@@ -138,7 +144,12 @@ export const columns = (
   {
     accessorKey: "status",
     header: ({ column }) => {
-      const statuses = ["Open", "Under Engineering review"]; // Removed "Assigned"
+      const statuses = [
+        "Open",
+        "Assigned",
+        "Under Engineering Review",
+        "Closed",
+      ]; // Added "Closed"
       const filterValues = (column.getFilterValue() as string[]) || statuses;
 
       return (
@@ -246,6 +257,8 @@ export function DataTable({ data = [], isLoading = false }) {
     pageIndex: 0,
     pageSize: 10,
   });
+  const [globalFilter, setGlobalFilter] = React.useState("");
+  const [teamMembers, setTeamMembers] = React.useState<any[]>([]);
   const router = useRouter();
 
   React.useEffect(() => {
@@ -253,6 +266,15 @@ export function DataTable({ data = [], isLoading = false }) {
       setTableData(data);
     }
   }, [data]);
+
+  React.useEffect(() => {
+    const loadTeamMembers = async () => {
+      const members = await fetchTeamMembers();
+      console.log("members: ", members);
+      setTeamMembers(members);
+    };
+    loadTeamMembers();
+  }, []);
 
   const updateRow = (serial: string, updates: Partial<Alert>) => {
     setTableData((prevData) =>
@@ -264,7 +286,7 @@ export function DataTable({ data = [], isLoading = false }) {
 
   const table = useReactTable<Alert>({
     data: tableData,
-    columns: columns(updateRow),
+    columns: columns(updateRow, teamMembers), // Pass teamMembers to columns
     onSortingChange: setSorting,
     onColumnFiltersChange: setColumnFilters,
     getCoreRowModel: getCoreRowModel(),
@@ -274,18 +296,28 @@ export function DataTable({ data = [], isLoading = false }) {
     onColumnVisibilityChange: setColumnVisibility,
     onRowSelectionChange: setRowSelection,
     onPaginationChange: setPagination,
+    onGlobalFilterChange: setGlobalFilter,
     state: {
       sorting,
       columnFilters,
       columnVisibility,
       rowSelection,
       pagination,
+      globalFilter,
     },
     autoResetPageIndex: false,
   });
 
   return (
     <div className="w-full px-20">
+      <div className="flex items-center py-4 gap-4">
+        <Input
+          placeholder="Search by alert name or ID..."
+          value={globalFilter ?? ""}
+          onChange={(event) => setGlobalFilter(event.target.value)}
+          className="max-w-sm bg-secondary border-gray-dark text-white"
+        />
+      </div>
       <div className="border-b border-gray-dark">
         <DataTablePagination table={table} />
         <Table>
@@ -315,7 +347,6 @@ export function DataTable({ data = [], isLoading = false }) {
           </TableHeader>
           <TableBody>
             {isLoading ? (
-              // Loading skeleton state
               [...Array(5)].map((_, rowIndex) => (
                 <TableRow
                   key={`skeleton-${rowIndex}`}
@@ -332,7 +363,6 @@ export function DataTable({ data = [], isLoading = false }) {
                 </TableRow>
               ))
             ) : table.getRowModel().rows?.length ? (
-              // Normal data state
               table.getRowModel().rows.map((row) => {
                 const serial = row.original._serial;
 
@@ -388,7 +418,6 @@ export function DataTable({ data = [], isLoading = false }) {
                 );
               })
             ) : (
-              // Empty state
               <TableRow className="hover:bg-white/5">
                 <TableCell
                   colSpan={columns.length}

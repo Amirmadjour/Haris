@@ -1,7 +1,7 @@
 import mysql from "mysql2/promise";
 import fs from "fs";
 import path from "path";
-import bcrypt from "bcryptjs"
+import bcrypt from "bcryptjs";
 
 const UPLOAD_DIR = path.join(process.cwd(), "uploads");
 
@@ -224,7 +224,7 @@ export async function getAlerts() {
   const [rows] = await pool.query(`
       SELECT 
         a.*,
-        (SELECT COUNT(*) FROM alerts) - ROW_NUMBER() OVER (ORDER BY trigger_time DESC) + 1 as display_index
+        CONCAT('100', (SELECT COUNT(*) FROM alerts) - ROW_NUMBER() OVER (ORDER BY trigger_time DESC) + 1) as display_index
       FROM alerts a
       ORDER BY trigger_time DESC
     `);
@@ -270,13 +270,17 @@ export async function addTeamMember(name: string, email: string) {
   );
 }
 
-export async function createUser(username: string, email: string, password: string) {
+export async function createUser(
+  username: string,
+  email: string,
+  password: string
+) {
   const hashedPassword = await bcrypt.hash(password, 10);
   const [result]: any = await pool.query(
     `INSERT INTO users (username, email, password_hash) VALUES (?, ?, ?)`,
     [username, email, hashedPassword]
   );
-  await addTeamMember(username, email)
+  await addTeamMember(username, email);
   return result.insertId;
 }
 
