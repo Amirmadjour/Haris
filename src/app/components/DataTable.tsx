@@ -182,6 +182,7 @@ export const columns = (
         </DropdownMenu>
       );
     },
+    enableGlobalFilter: false,
     filterFn: (row, columnId, filterValue) => {
       if (!filterValue) return true;
       return row.getValue(columnId) === filterValue;
@@ -236,6 +237,7 @@ export const columns = (
       );
     },
     cell: ({ row }) => <div>{row.getValue("status")}</div>,
+    enableGlobalFilter: false,
     filterFn: (row, columnId, filterValues: string[]) => {
       return filterValues.includes(row.getValue(columnId));
     },
@@ -284,6 +286,7 @@ export const columns = (
       );
     },
     cell: ({ row }) => <div>{row.getValue("severity")}</div>,
+    enableGlobalFilter: false,
     filterFn: (row, columnId, filterValues: string[]) => {
       return filterValues.includes(row.getValue(columnId));
     },
