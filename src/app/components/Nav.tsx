@@ -3,7 +3,7 @@ import Image from "next/image";
 import NotificationBell from "./NotificationBell";
 import { useRouter } from "next/navigation";
 import { signOutAction } from "../actions/auth";
-import { LogOut } from "lucide-react";
+import { LogOut, Camera, User } from "lucide-react";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -17,13 +17,51 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
+import { uploadProfileImage } from "@/lib/profile";
+import { toast } from "sonner";
+import { useRef, useState } from "react";
 
 export default function Nav({ user }: { user: any }) {
   const router = useRouter();
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [profileImage, setProfileImage] = useState(user?.profile_image || null);
 
   const handleLogout = async () => {
     await signOutAction();
     router.push("/auth/login");
+  };
+
+  const handleProfileImageChange = async (
+    e: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    try {
+      // Validate file type
+      const validTypes = ["image/jpeg", "image/png", "image/webp"];
+      if (!validTypes.includes(file.type)) {
+        toast.error("Invalid file type. Please upload a JPEG, PNG, or WebP image.");
+        return;
+      }
+
+      // Validate file size (max 5MB)
+      if (file.size > 5 * 1024 * 1024) {
+        toast.error("File size too large. Maximum 5MB allowed.");
+        return;
+      }
+
+      const { imageUrl } = await uploadProfileImage(user.username, file);
+      setProfileImage(imageUrl);
+      toast.success("Profile image updated successfully");
+    } catch (error) {
+      toast.error("Failed to update profile image");
+      console.error("Profile image upload error:", error);
+    } finally {
+      if (fileInputRef.current) {
+        fileInputRef.current.value = "";
+      }
+    }
   };
 
   return (
@@ -66,16 +104,36 @@ export default function Nav({ user }: { user: any }) {
           </AlertDialogContent>
         </AlertDialog>
 
-        <div className="flex items-center justify-center gap-2 rounded-full hover:bg-white/5 p-1.5 transition-all duration-200 ease-in-out">
-          <div className="flex items-center justify-center bg-[#4C4C4C] rounded-full p-1.5">
-            <Image
-              src="/user.svg"
-              alt="user"
-              width={24}
-              height={24}
-              className="rounded-full"
-            />
+        <div className="flex items-center justify-center gap-2 rounded-full hover:bg-white/5 p-1.5 transition-all duration-200 ease-in-out relative group">
+          <div className="relative">
+            {profileImage ? (
+              <Image
+                src={profileImage}
+                alt="user"
+                width={48}
+                height={48}
+                className="rounded-full w-12 h-12 object-cover"
+                priority
+              />
+            ) : (
+              <div className="flex items-center justify-center bg-[#4C4C4C] rounded-full w-12 h-12">
+                <User width={24} height={24} className="rounded-full" />
+              </div>
+            )}
+            <button
+              className="absolute -bottom-1 -right-1 bg-primary rounded-full p-1.5 hover:bg-primary/90 transition-all opacity-0 group-hover:opacity-100"
+              onClick={() => fileInputRef.current?.click()}
+            >
+              <Camera className="h-4 w-4 text-white" />
+            </button>
           </div>
+          <input
+            type="file"
+            ref={fileInputRef}
+            onChange={handleProfileImageChange}
+            accept="image/jpeg, image/png, image/webp"
+            className="hidden"
+          />
           <p className="font-semibold text-xl text-white font-inter">
             {user?.username}
           </p>

@@ -162,7 +162,7 @@ export async function GET() {
                     search_name: report.name,
                     _serial: historyEntry.name + index,
                     severity: "Info",
-                    status: "Completed",
+                    status: "Open",
                     trigger_time: event._indextime,
                     splunk_link: event.id,
                     type: "report",

@@ -15,6 +15,7 @@ export default function Home() {
   useEffect(() => {
     const checkAuth = async () => {
       const currentUser = await getCurrentUserAction();
+      console.log("current user: ", currentUser)
       if (!currentUser) {
         router.push("/auth/login");
       } else {
