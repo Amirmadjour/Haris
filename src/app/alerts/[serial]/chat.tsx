@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import ChatInput from "./chat-input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import { Video, Phone, EllipsisVertical, Paperclip } from "lucide-react";
+import { Paperclip } from "lucide-react";
 import { toast } from "sonner";
 
 interface AlertChatProps {
@@ -21,12 +21,12 @@ export default function AlertChat({
 }: AlertChatProps) {
   const [messages, setMessages] = useState<any[]>([]);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const eventSourceRef = useRef<EventSource | null>(null);
 
   const fetchMessages = async () => {
     try {
       const response = await fetch(`/api/chat?alertSerial=${alertSerial}`);
       const data = await response.json();
-      console.log("chat data: ", data);
       setMessages(data.messages || []);
     } catch (error) {
       console.error("Failed to fetch messages", error);
@@ -35,10 +35,51 @@ export default function AlertChat({
   };
 
   useEffect(() => {
+    // Initial fetch
     fetchMessages();
-    const interval = setInterval(fetchMessages, 5000);
-    return () => clearInterval(interval);
+
+    // Set up SSE connection
+    const eventSource = new EventSource(
+      `/api/chat/events?alertSerial=${encodeURIComponent(alertSerial)}`
+    );
+    eventSourceRef.current = eventSource;
+
+    eventSource.onmessage = (event) => {
+      try {
+        // Handle both direct JSON and SSE-formatted messages
+        const data = event.data.startsWith("{")
+          ? JSON.parse(event.data)
+          : JSON.parse(event.data.replace(/^data: /, ""));
+
+        if (data.type === "message") {
+          setMessages((prev) => [...prev, data.data]);
+          scrollToBottom();
+        } else if (data.type === "init") {
+          // Handle initialization if needed
+        }
+      } catch (error) {
+        console.error("Error parsing SSE message", error);
+      }
+    };
+
+    eventSource.onerror = () => {
+      console.log("SSE connection error, reconnecting...");
+      eventSource.close();
+      setTimeout(() => {
+        eventSourceRef.current = new EventSource(
+          `/api/chat/events?alertSerial=${encodeURIComponent(alertSerial)}`
+        );
+      }, 1000);
+    };
+
+    return () => {
+      eventSource.close();
+    };
   }, [alertSerial]);
+
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
 
   const handleSendMessage = async (
     message: string,
@@ -60,7 +101,6 @@ export default function AlertChat({
         method: "POST",
         body: formData,
       });
-      fetchMessages();
     } catch (error) {
       console.error("Failed to send message", error);
       toast.error("Error", {

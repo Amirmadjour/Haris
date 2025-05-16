@@ -49,7 +49,9 @@ export default async function AlertDetailPage({
 }: {
   params: { serial: string };
 }) {
-  const alert = await getAlert(params.serial);
+  const { serial } = params;
+
+  const alert = await getAlert(serial);
   const currentUser = await getCurrentUserAction();
   const teamMembers = await getTeamMembers();
 

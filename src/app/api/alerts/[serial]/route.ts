@@ -3,6 +3,8 @@ import db from "@/lib/db";
 
 export async function GET(req: Request, { params }: any) {
   try {
+      const { serial } = params;
+
     // MySQL version - using connection pool
     const [rows]: any = await db.query(
       `SELECT 
@@ -10,7 +12,7 @@ export async function GET(req: Request, { params }: any) {
         CONCAT('100', (SELECT COUNT(*) FROM alerts) - ROW_NUMBER() OVER (ORDER BY trigger_time DESC) + 1) as display_index
       FROM alerts a
       WHERE _serial = ?`,
-      [params.serial]
+      [serial]
     );
 
     if (!rows || rows.length === 0) {

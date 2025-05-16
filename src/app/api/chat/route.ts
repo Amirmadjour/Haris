@@ -10,13 +10,7 @@ import type { NextRequest } from "next/server";
 import fs from "fs";
 import path from "path";
 import { sendMentionNotification } from "@/lib/email";
-
-const UPLOAD_DIR = path.join(process.cwd(), "uploads");
-
-// Ensure upload directory exists
-if (!fs.existsSync(UPLOAD_DIR)) {
-  fs.mkdirSync(UPLOAD_DIR, { recursive: true });
-}
+import { broadcastMessage } from "./events/route";
 
 export async function GET(request: NextRequest) {
   const alertSerial = request.nextUrl.searchParams.get("alertSerial");
@@ -32,7 +26,6 @@ export async function GET(request: NextRequest) {
     const room: any = await getOrCreateChatRoom(alertSerial);
     const messages: any = await getChatMessages(room.id);
 
-    // Use Promise.all to await all the attachment fetches
     const messagesWithAttachments = await Promise.all(
       messages.map(async (message: any) => {
         try {
@@ -51,10 +44,7 @@ export async function GET(request: NextRequest) {
             `Failed to load attachments for message ${message.id}`,
             error
           );
-          return {
-            ...message,
-            attachments: [], // Return empty array if attachments fail to load
-          };
+          return { ...message, attachments: [] };
         }
       })
     );
@@ -86,7 +76,7 @@ export async function POST(request: NextRequest) {
     const room: any = await getOrCreateChatRoom(alertSerial);
     const messageId = await addChatMessage(room.id, sender, message, mentions);
 
-    // Handle file attachments (existing code remains the same)
+    // Handle file attachments
     const attachments = [];
     for (const [key, value] of formData.entries()) {
       if (key.startsWith("file-") && value instanceof File) {
@@ -100,11 +90,23 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    // Broadcast to all clients listening to this alertSerial
+    const newMessage = {
+      id: messageId,
+      sender,
+      message,
+      attachments,
+      created_at: new Date().toISOString(),
+    };
+
+    // Broadcast the message
+    broadcastMessage(alertSerial, newMessage);
+
     // Send email notifications for mentions
     if (mentions.length > 0) {
-      const alert = await getAlert(alertSerial); // You'll need to implement this
+      const alert = await getAlert(alertSerial);
       const alertLink = `${process.env.NEXT_PUBLIC_BASE_URL}/alerts/${alertSerial}`;
-      
+
       for (const username of mentions) {
         try {
           const member = await getTeamMemberByUsername(username);
@@ -123,7 +125,7 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    return NextResponse.json({ success: true, attachments });
+    return NextResponse.json({ success: true, messageId, attachments });
   } catch (error) {
     console.error("Error in POST:", error);
     return NextResponse.json(
