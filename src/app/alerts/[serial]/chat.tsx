@@ -20,6 +20,7 @@ export default function AlertChat({
   currentUser,
 }: AlertChatProps) {
   const [messages, setMessages] = useState<any[]>([]);
+  const [teamMembers, setTeamMembers] = useState<any[]>([]);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const eventSourceRef = useRef<EventSource | null>(null);
 
@@ -76,6 +77,13 @@ export default function AlertChat({
       eventSource.close();
     };
   }, [alertSerial]);
+
+  useEffect(() => {
+    fetch("/api/team-members")
+      .then((res) => res.json())
+      .then(setTeamMembers)
+      .catch(console.error);
+  }, []);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -176,7 +184,11 @@ export default function AlertChat({
           </Avatar>
           <div className="flex flex-col gap-1 font-poppins">
             <h2 className="text-lg font-semibold">Team members</h2>
-            <h2 className="text-sm">Ahmed, Hassan, Faisal</h2>
+            <h2 className="text-sm">
+              {teamMembers.map((t, index) =>
+                t.name.concat(index + 1 == teamMembers.length ? "." : ", ")
+              )}
+            </h2>
           </div>
         </div>
       </CardHeader>
