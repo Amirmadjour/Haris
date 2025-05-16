@@ -25,7 +25,7 @@ function buildSplunkSearchUrl({
   splQuery: any;
   sid: any;
 }) {
-  const baseUrl = "http://localhost:8000/en-US/app/search/search";
+  const baseUrl = process.env.SPLUNK_UI_BASE_URL + "/en-US/app/search/search";
   const savedSearchPath = `/servicesNS/admin/search/saved/searches/${search_name}`;
   const params = new URLSearchParams({
     s: savedSearchPath,
@@ -33,9 +33,8 @@ function buildSplunkSearchUrl({
     dispatch_sample_ratio: "1",
     workload_pool: "",
     q: splQuery,
-    earliest: "-60m@m",
-    latest: "now",
-    "display.page.search.tab": "events",
+    earliest: process.env.SPLUNK_SEARCH_EARLIEST || "-60m@m",
+    latest: process.env.SPLUNK_SEARCH_LATEST || "now",
     sid: sid,
   });
 
@@ -43,8 +42,10 @@ function buildSplunkSearchUrl({
 }
 
 export async function GET() {
-  const auth = Buffer.from("admin:MadjourAmir1#").toString("base64");
-  const baseUrl = "https://localhost:8089";
+  const auth = Buffer.from(
+    `${process.env.SPLUNK_USERNAME}:${process.env.SPLUNK_PASSWORD}`
+  ).toString("base64");
+  const baseUrl = process.env.SPLUNK_BASE_URL;
   const headers = {
     Authorization: `Basic ${auth}`,
   };
