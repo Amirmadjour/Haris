@@ -41,7 +41,9 @@ export default function Nav({ user }: { user: any }) {
       // Validate file type
       const validTypes = ["image/jpeg", "image/png", "image/webp"];
       if (!validTypes.includes(file.type)) {
-        toast.error("Invalid file type. Please upload a JPEG, PNG, or WebP image.");
+        toast.error(
+          "Invalid file type. Please upload a JPEG, PNG, or WebP image."
+        );
         return;
       }
 
@@ -53,6 +55,7 @@ export default function Nav({ user }: { user: any }) {
 
       const { imageUrl } = await uploadProfileImage(user.username, file);
       setProfileImage(imageUrl);
+      console.log(imageUrl);
       toast.success("Profile image updated successfully");
     } catch (error) {
       toast.error("Failed to update profile image");
@@ -110,13 +113,13 @@ export default function Nav({ user }: { user: any }) {
               <Image
                 src={profileImage}
                 alt="user"
-                width={48}
-                height={48}
-                className="rounded-full w-12 h-12 object-cover"
+                width={36}
+                height={36}
+                className="rounded-full w-[36px] h-[36px] object-cover"
                 priority
               />
             ) : (
-              <div className="flex items-center justify-center bg-[#4C4C4C] rounded-full w-12 h-12">
+              <div className="flex items-center justify-center bg-[#4C4C4C] rounded-full w-[36px] h-[36px]">
                 <User width={24} height={24} className="rounded-full" />
               </div>
             )}

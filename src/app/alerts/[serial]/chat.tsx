@@ -194,29 +194,28 @@ export default function AlertChat({
       </CardHeader>
       <CardContent className="p-0">
         <div className="h-96 overflow-y-auto p-4">
-          {messages.length === 0 ? (
-            <p className="text-gray-500 text-center py-8">
-              No messages yet. Start the discussion!
-            </p>
-          ) : (
-            messages.map((message) => (
-              <div key={message.id} className="mb-4 flex gap-3">
-                <Avatar>
-                  <AvatarImage src="/user_01.png" />
-                  <AvatarFallback>{message?.sender.charAt(0)}</AvatarFallback>
-                </Avatar>
-                <div>
-                  <div className="flex items-center gap-2">
-                    <span className="font-semibold">{message?.sender}</span>
-                    <span className="text-xs text-gray-500">
-                      {new Date(message.created_at).toLocaleString()}
-                    </span>
-                  </div>
-                  {renderMessageContent(message?.message, message?.attachments)}
+          {messages.map((message) => (
+            <div key={message.id} className="mb-4 flex gap-3">
+              <Avatar>
+                <AvatarImage
+                  src={message.sender_profile_image || "/default-user.png"}
+                  alt={message.sender}
+                />
+                <AvatarFallback className="bg-primary">
+                  {message?.sender.charAt(0)}
+                </AvatarFallback>
+              </Avatar>
+              <div>
+                <div className="flex items-center gap-2">
+                  <span className="font-semibold">{message?.sender}</span>
+                  <span className="text-xs text-gray-500">
+                    {new Date(message.created_at).toLocaleString()}
+                  </span>
                 </div>
+                {renderMessageContent(message?.message, message?.attachments)}
               </div>
-            ))
-          )}
+            </div>
+          ))}
           <div ref={messagesEndRef} />
         </div>
         <div className="">

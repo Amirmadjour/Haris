@@ -117,6 +117,11 @@ export async function addChatMessage(
   message: string,
   mentions: string[] = []
 ) {
+  const user = await findUserByUsername(sender);
+  if (!user) {
+    throw new Error(`User ${sender} not found`);
+  }
+
   const [result]: any = await pool.query(
     `INSERT INTO chat_messages (room_id, sender, message, mentions) VALUES (?, ?, ?, ?)`,
     [roomId, sender, message, JSON.stringify(mentions)]
@@ -251,16 +256,25 @@ export async function getOrCreateChatRoom(alertSerial: string) {
 
 export async function getChatMessages(roomId: number) {
   const [rows] = await pool.query(
-    `SELECT * FROM chat_messages 
-    WHERE room_id = ?
-    ORDER BY created_at ASC`,
+    `SELECT 
+      cm.*, 
+      u.profile_image as sender_profile_image
+    FROM chat_messages cm
+    LEFT JOIN users u ON cm.sender = u.username
+    WHERE cm.room_id = ?
+    ORDER BY cm.created_at ASC`,
     [roomId]
   );
   return rows;
 }
 
 export async function getTeamMembers() {
-  const [rows] = await pool.query("SELECT * FROM team_members ORDER BY name");
+  const [rows] = await pool.query(`
+    SELECT tm.*, u.profile_image
+    FROM team_members tm
+    LEFT JOIN users u ON tm.name = u.username
+    ORDER BY tm.name
+  `);
   return rows;
 }
 
@@ -277,7 +291,8 @@ export async function createUser(
   password: string
 ) {
   const hashedPassword = await bcrypt.hash(password, 10);
-  const capitalizedName = username.charAt(0).toUpperCase() + username.slice(1).toLowerCase();
+  const capitalizedName =
+    username.charAt(0).toUpperCase() + username.slice(1).toLowerCase();
   const [result]: any = await pool.query(
     `INSERT INTO users (username, email, password_hash) VALUES (?, ?, ?)`,
     [capitalizedName, email, hashedPassword]
