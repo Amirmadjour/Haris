@@ -1,4 +1,4 @@
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import AlertChat from "./chat";
 import Nav from "@/app/components/Nav";
 import { getCurrentUserAction } from "@/app/actions/auth";
@@ -54,6 +54,10 @@ export default async function AlertDetailPage({
   const alert = await getAlert(serial);
   const currentUser = await getCurrentUserAction();
   const teamMembers = await getTeamMembers();
+
+  if (!currentUser) {
+    redirect("/auth/login");
+  }
 
   if (!alert) {
     return notFound();
