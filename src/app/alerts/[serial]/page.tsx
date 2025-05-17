@@ -47,7 +47,7 @@ const getSeverityColor = (severityValue: string) => {
 export default async function AlertDetailPage({
   params,
 }: {
-  params: { serial: string };
+  params: any;
 }) {
   const { serial } = params;
 

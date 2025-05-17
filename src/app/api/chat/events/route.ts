@@ -1,8 +1,7 @@
+// src/app/api/chat/events/route.ts
 import { NextRequest } from "next/server";
 import { getOrCreateChatRoom, getChatMessages } from "@/lib/db";
-
-// Store connected clients with proper typing
-const clients = new Map<string, (data: string) => void>();
+import { addClient, removeClient, broadcastMessage } from "@/lib/chatUtils";
 
 export async function GET(request: NextRequest) {
   const alertSerial = request.nextUrl.searchParams.get("alertSerial");
@@ -15,15 +14,13 @@ export async function GET(request: NextRequest) {
   const writer = stream.writable.getWriter();
   const encoder = new TextEncoder();
 
-  // Correctly typed send function that accepts string
   const sendEvent = (data: string) => {
     writer.write(encoder.encode(data));
   };
 
   const clientId = `${alertSerial}-${Date.now()}`;
-  clients.set(clientId, sendEvent);
+  addClient(clientId, sendEvent);
 
-  // Send initial messages (properly stringified)
   try {
     const room = await getOrCreateChatRoom(alertSerial);
     const messages = await getChatMessages(room.id);
@@ -33,7 +30,7 @@ export async function GET(request: NextRequest) {
   }
 
   request.signal.onabort = () => {
-    clients.delete(clientId);
+    removeClient(clientId);
     writer.close();
   };
 
@@ -43,15 +40,5 @@ export async function GET(request: NextRequest) {
       "Cache-Control": "no-cache",
       Connection: "keep-alive",
     },
-  });
-}
-
-// Updated broadcast function with proper string conversion
-export function broadcastMessage(alertSerial: string, message: object) {
-  const messageString = `data: ${JSON.stringify({ type: "message", data: message })}\n\n`;
-  clients.forEach((send, clientId) => {
-    if (clientId.startsWith(alertSerial)) {
-      send(messageString);
-    }
   });
 }

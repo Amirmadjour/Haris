@@ -10,7 +10,7 @@ import type { NextRequest } from "next/server";
 import fs from "fs";
 import path from "path";
 import { sendMentionNotification } from "@/lib/email";
-import { broadcastMessage } from "./events/route";
+import { broadcastMessage } from "@/lib/chatUtils";
 
 export async function GET(request: NextRequest) {
   const alertSerial = request.nextUrl.searchParams.get("alertSerial");
