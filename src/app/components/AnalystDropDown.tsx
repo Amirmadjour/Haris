@@ -31,9 +31,9 @@ export function AnalystDropdown({
     });
   };
 
-  if (status !== "Open") {
+  /* if (status !== "Open") {
     return <div className="flex items-center gap-1">{currentAnalyst || "No analyst assigned"}</div>;
-  }
+  } */
 
   return (
     <DropdownMenu>

@@ -196,8 +196,8 @@ export const columns = (
         "Assigned",
         "Under Engineering Review",
         "Closed",
-      ]; // Added "Closed"
-      const filterValues = (column.getFilterValue() as string[]) || statuses;
+      ];
+      const filterValues = (column.getFilterValue() as string[]) || [];
 
       return (
         <DropdownMenu>
@@ -239,6 +239,7 @@ export const columns = (
     cell: ({ row }) => <div>{row.getValue("status")}</div>,
     enableGlobalFilter: false,
     filterFn: (row, columnId, filterValues: string[]) => {
+      if (!filterValues || filterValues.length === 0) return true;
       return filterValues.includes(row.getValue(columnId));
     },
   },

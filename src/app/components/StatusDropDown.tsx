@@ -10,7 +10,11 @@ import { ChevronDown } from "lucide-react";
 import { useTransition } from "react";
 import { updateAlertStatus } from "@/app/actions/alerts";
 
-const statusOptions = ["Under Engineering Review", "Closed"];
+const statusOptions = [
+  "Open",
+  "Under Engineering Review",
+  "Closed",
+];
 
 export function StatusDropdown({
   currentStatus,
@@ -25,24 +29,18 @@ export function StatusDropdown({
 
   const handleStatusChange = (status: string) => {
     startTransition(async () => {
-      await updateAlertStatus(alertSerial, memberName, status);
+      await updateAlertStatus(alertSerial, "", status);
     });
   };
 
   return (
     <DropdownMenu>
-      {currentStatus != "Closed" ? (
-        <DropdownMenuTrigger asChild>
-          <div className="flex items-center gap-1 cursor-pointer">
-            {currentStatus}
-            <ChevronDown className="text-white" size={16} />
-          </div>
-        </DropdownMenuTrigger>
-      ) : (
+      <DropdownMenuTrigger asChild>
         <div className="flex items-center gap-1 cursor-pointer">
           {currentStatus}
+          <ChevronDown className="text-white" size={16} />
         </div>
-      )}
+      </DropdownMenuTrigger>
       <DropdownMenuContent className="bg-secondary border-gray-dark">
         {statusOptions.map((status) => (
           <DropdownMenuItem
