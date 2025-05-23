@@ -7,7 +7,7 @@ import path from "path";
 export async function GET(request: Request, { params }: any) {
   const { id } = params;
   try {
-    const attachment: any = await getAttachmentInfo(id);
+    const attachment: any = getAttachmentInfo(id);
     if (!attachment) {
       return new NextResponse(null, { status: 404 });
     }

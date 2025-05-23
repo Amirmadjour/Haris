@@ -30,7 +30,7 @@ export async function GET(request: NextRequest) {
     const messagesWithAttachments = await Promise.all(
       messages.map(async (message: any) => {
         try {
-          const attachments: any = await getMessageAttachments(message.id);
+          const attachments: any = getMessageAttachments(message.id);
           return {
             ...message,
             attachments: attachments.map((attachment: any) => ({

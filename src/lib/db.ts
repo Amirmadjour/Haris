@@ -133,9 +133,10 @@ export async function saveAttachment(
     (message_id, room_id, filename, filepath, content_type, size)
     VALUES (?, ?, ?, ?, ?, ?)`
   );
-  stmt.run(messageId, roomId, file.name, fileId, file.type, file.size);
 
-  return fileId;
+  const result = stmt.run(messageId, roomId, file.name, fileId, file.type, file.size);
+
+  return result.lastInsertRowid;
 }
 
 export function getMessageAttachments(messageId: number) {
