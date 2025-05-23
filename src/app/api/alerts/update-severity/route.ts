@@ -5,13 +5,21 @@ import db from "@/lib/db";
 export async function POST(req: Request) {
   try {
     const { serial, severity } = await req.json();
-    
-    await db.query(
+
+    const stmt = db.prepare(
       `UPDATE alerts 
        SET severity = ?, updated_at = CURRENT_TIMESTAMP
-       WHERE _serial = ?`,
-      [severity, serial]
+       WHERE _serial = ?`
     );
+
+    const result = stmt.run(severity, serial);
+
+    if (result.changes === 0) {
+      return NextResponse.json(
+        { error: "Alert not found or no changes made" },
+        { status: 404 }
+      );
+    }
 
     return NextResponse.json({ success: true });
   } catch (error) {

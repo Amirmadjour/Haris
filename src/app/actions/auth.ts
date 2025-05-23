@@ -6,7 +6,7 @@ import { findUserByUsername } from "@/lib/db";
 import { cookies } from "next/headers";
 
 export async function signInAction(username: string, password: string) {
-  const user = await verifyCredentials(username, password);
+  const user = verifyCredentials(username, password);
   if (!user) return null;
 
   // Stringify the user object before storing in cookie
@@ -41,7 +41,7 @@ export async function getCurrentUserAction() {
 }
 
 export async function getCurrentUserProfile(username: string) {
-  const user = await findUserByUsername(username);
+  const user: any = findUserByUsername(username);
   return {
     profile_image: user?.profile_image || null,
   };

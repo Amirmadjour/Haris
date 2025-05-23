@@ -87,17 +87,23 @@ export async function GET() {
         })
     );
 
+    const alertNames = alertsResponse.data.entry
+      .filter((entry: any) => entry.name && entry.name !== "-")
+      .map((entry: any) => entry.name);
+
+    console.log("alertNames: ", alertNames);
+
     const historicalAlerts = alertDetails
       .flatMap((detail) =>
         detail?.entry.map((entry: any) => {
-          console.log("Entry: ", entry);
+          //console.log("Entry: ", entry);
           const splQuery = savedSearchesResponse.data.entry.find(
             (entry_s: any) => {
               return entry_s?.name === entry?.content?.savedsearch_name;
             }
           )?.content?.qualifiedSearch;
 
-          console.log("splQuery: ", splQuery);
+          //console.log("splQuery: ", splQuery);
 
           return {
             _time: entry?.content?.trigger_time_rendered,
@@ -115,13 +121,11 @@ export async function GET() {
           };
         })
       )
-      .filter(async (alert) => !(await alertExists(alert._serial)));
+      .filter(async (alert) => !alertExists(alert._serial));
 
-    console.log("Historical alerts: ", historicalAlerts);
+    //console.log("Historical alerts: ", historicalAlerts);
 
     const reports = savedSearchesResponse.data.entry.filter((search: any) => {
-      const alertNames = historicalAlerts.map((alert) => alert.search_name);
-
       return !alertNames.includes(search.name);
     });
 
@@ -157,7 +161,7 @@ export async function GET() {
 
               return eventsResponse.data.results.map(
                 (event: any, index: number) => {
-                  console.log("Report", event);
+                  //console.log("Report", event);
                   return {
                     _time: event._time,
                     search_name: report.name,
@@ -176,14 +180,14 @@ export async function GET() {
           return reportAlerts.flat();
         } catch (error) {
           console.error(`Error processing report ${report.name}:`, error);
-          return [];
         }
       })
     );
 
     const historicalReports = reportDetails
       .flat()
-      .filter(async (report) => !(await alertExists(report._serial)));
+      .filter((report) => report != undefined)
+      .filter(async (report) => !alertExists(report._serial));
 
     console.log("historicalReports: ", historicalReports.length);
 
@@ -193,7 +197,8 @@ export async function GET() {
 
     if (allHistoricalItems.length > 0) {
       console.log("All historical items: ", allHistoricalItems.length);
-      await insertAlerts(allHistoricalItems);
+      console.log("first historcal item: ", allHistoricalItems[0]);
+      insertAlerts(allHistoricalItems);
     }
 
     return NextResponse.json({

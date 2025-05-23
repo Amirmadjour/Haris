@@ -1,25 +1,29 @@
+// app/api/alerts/[serial]/route.ts
 import { NextResponse } from "next/server";
 import db from "@/lib/db";
 
 export async function GET(req: Request, { params }: any) {
   try {
-      const { serial } = params;
+    const { serial } = params;
 
-    // MySQL version - using connection pool
-    const [rows]: any = await db.query(
-      `SELECT 
-        a.*,
-        CONCAT('100', (SELECT COUNT(*) FROM alerts) - ROW_NUMBER() OVER (ORDER BY trigger_time DESC) + 1) as display_index
-      FROM alerts a
-      WHERE _serial = ?`,
-      [serial]
-    );
+    // SQLite version
+    const alert = db.prepare(`
+      WITH numbered_alerts AS (
+        SELECT a.*, 
+               ROW_NUMBER() OVER (ORDER BY trigger_time DESC) as row_num
+        FROM alerts a
+      )
+      SELECT *, 
+             '100' || (SELECT COUNT(*) FROM alerts) - row_num + 1 as display_index
+      FROM numbered_alerts
+      WHERE _serial = ?
+    `).get(serial);
 
-    if (!rows || rows.length === 0) {
+    if (!alert) {
       return NextResponse.json({ error: "Alert not found" }, { status: 404 });
     }
 
-    return NextResponse.json(rows[0]);
+    return NextResponse.json(alert);
   } catch (error) {
     console.error("Database error:", error);
     return NextResponse.json(

@@ -1,132 +1,118 @@
-import mysql from "mysql2/promise";
+import Database from "better-sqlite3";
 import fs from "fs";
 import path from "path";
 import bcrypt from "bcryptjs";
 
 const UPLOAD_DIR = path.join(process.cwd(), "uploads");
+const DB_PATH = path.join(process.cwd(), "alerts.db");
 
-// MySQL connection configuration using your cPanel details
-const pool = mysql.createPool({
-  host: "eris-shared-g1.dzsecurity.net",
-  user: "madjri81_amir_haris",
-  password: "p)c9BsL'cTW\"4Su",
-  database: "madjri81_haris",
-  waitForConnections: true,
-  connectionLimit: 10,
-  queueLimit: 0,
-});
+// Initialize SQLite database
+const db = new Database(DB_PATH);
+db.pragma("journal_mode = WAL"); // Better performance
 
 // Initialize database
 export async function initDb() {
-  const connection = await pool.getConnection();
   try {
-    // Create tables with MySQL syntax
-    await connection.query(`
+    // Enable foreign key constraints
+    db.pragma("foreign_keys = ON");
+
+    // Create tables with SQLite syntax
+    db.exec(`
       CREATE TABLE IF NOT EXISTS alerts (
-        id INT AUTO_INCREMENT PRIMARY KEY,
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
         _time TEXT NOT NULL,
         search_name TEXT NOT NULL,
-        _serial VARCHAR(255) NOT NULL UNIQUE,
+        _serial TEXT NOT NULL UNIQUE,
         severity TEXT NOT NULL,
         status TEXT NOT NULL,
-        trigger_time BIGINT NOT NULL,
+        trigger_time INTEGER NOT NULL,
         assigned_to TEXT,
         splunk_link TEXT,
-        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-      ) ENGINE=InnoDB;
-    `);
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      );
 
-    await connection.query(`
       CREATE TABLE IF NOT EXISTS chat_rooms (
-        id INT AUTO_INCREMENT PRIMARY KEY,
-        alert_serial VARCHAR(255) NOT NULL UNIQUE,
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        alert_serial TEXT NOT NULL UNIQUE,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        CONSTRAINT fk_alert_serial FOREIGN KEY (alert_serial) 
-        REFERENCES alerts(_serial) ON DELETE CASCADE
-      ) ENGINE=InnoDB;
-    `);
+        FOREIGN KEY (alert_serial) REFERENCES alerts(_serial) ON DELETE CASCADE
+      );
 
-    await connection.query(`
       CREATE TABLE IF NOT EXISTS chat_messages (
-        id INT AUTO_INCREMENT PRIMARY KEY,
-        room_id INT NOT NULL,
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        room_id INTEGER NOT NULL,
         sender TEXT NOT NULL,
         message TEXT NOT NULL,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         mentions TEXT,
-        CONSTRAINT fk_room_id FOREIGN KEY (room_id) 
-        REFERENCES chat_rooms(id) ON DELETE CASCADE
-      ) ENGINE=InnoDB;
-    `);
+        FOREIGN KEY (room_id) REFERENCES chat_rooms(id) ON DELETE CASCADE
+      );
 
-    await connection.query(`
       CREATE TABLE IF NOT EXISTS chat_attachments (
-        id INT AUTO_INCREMENT PRIMARY KEY,
-        message_id INT NOT NULL,
-        room_id INT NOT NULL,
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        message_id INTEGER NOT NULL,
+        room_id INTEGER NOT NULL,
         filename TEXT NOT NULL,
         filepath TEXT NOT NULL,
         content_type TEXT,
-        size INT,
+        size INTEGER,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        CONSTRAINT fk_message_id FOREIGN KEY (message_id) 
-        REFERENCES chat_messages(id) ON DELETE CASCADE,
-        CONSTRAINT fk_room_id_attachments FOREIGN KEY (room_id) 
-        REFERENCES chat_rooms(id) ON DELETE CASCADE
-      ) ENGINE=InnoDB;
-    `);
+        FOREIGN KEY (message_id) REFERENCES chat_messages(id) ON DELETE CASCADE,
+        FOREIGN KEY (room_id) REFERENCES chat_rooms(id) ON DELETE CASCADE
+      );
 
-    await connection.query(`
       CREATE TABLE IF NOT EXISTS team_members (
-        id INT AUTO_INCREMENT PRIMARY KEY,
-        name VARCHAR(255) NOT NULL UNIQUE,
-        email VARCHAR(255) NOT NULL UNIQUE
-      ) ENGINE=InnoDB;
-    `);
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        name TEXT NOT NULL UNIQUE,
+        email TEXT NOT NULL UNIQUE
+      );
 
-    await connection.query(`
       CREATE TABLE IF NOT EXISTS users (
-        id INT AUTO_INCREMENT PRIMARY KEY,
-        username VARCHAR(255) NOT NULL UNIQUE,
-        email VARCHAR(255) NOT NULL UNIQUE,
-        password_hash VARCHAR(255) NOT NULL,
-        profile_image VARCHAR(255),
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        username TEXT NOT NULL UNIQUE,
+        email TEXT NOT NULL UNIQUE,
+        password_hash TEXT NOT NULL,
+        profile_image TEXT,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         last_login TIMESTAMP NULL
-      ) ENGINE=InnoDB;
+      );
     `);
 
     // Create indexes
-    /*await connection.query('CREATE INDEX idx_serial ON alerts (_serial)');
-    await connection.query('CREATE INDEX idx_chat_room_alert ON chat_rooms (alert_serial)');
-    await connection.query('CREATE INDEX idx_chat_messages_room ON chat_messages (room_id)');
-    await connection.query('CREATE INDEX idx_chat_attachments_message ON chat_attachments (message_id)'); */
+    db.exec(`
+      CREATE INDEX IF NOT EXISTS idx_serial ON alerts (_serial);
+      CREATE INDEX IF NOT EXISTS idx_chat_room_alert ON chat_rooms (alert_serial);
+      CREATE INDEX IF NOT EXISTS idx_chat_messages_room ON chat_messages (room_id);
+      CREATE INDEX IF NOT EXISTS idx_chat_attachments_message ON chat_attachments (message_id);
+    `);
 
     // Ensure upload directory exists
     if (!fs.existsSync(UPLOAD_DIR)) {
       fs.mkdirSync(UPLOAD_DIR, { recursive: true });
     }
-  } finally {
-    connection.release();
+  } catch (error) {
+    console.error("Database initialization failed:", error);
+    throw error;
   }
 }
 
-export async function addChatMessage(
+// Chat Message Functions
+export function addChatMessage(
   roomId: number,
   sender: string,
   message: string,
   mentions: string[] = []
 ) {
-  const user = await findUserByUsername(sender);
+  const user = findUserByUsername(sender);
   if (!user) {
     throw new Error(`User ${sender} not found`);
   }
 
-  const [result]: any = await pool.query(
-    `INSERT INTO chat_messages (room_id, sender, message, mentions) VALUES (?, ?, ?, ?)`,
-    [roomId, sender, message, JSON.stringify(mentions)]
+  const stmt = db.prepare(
+    `INSERT INTO chat_messages (room_id, sender, message, mentions) VALUES (?, ?, ?, ?)`
   );
-  return result.insertId;
+  const info = stmt.run(roomId, sender, message, JSON.stringify(mentions));
+  return info.lastInsertRowid;
 }
 
 export async function saveAttachment(
@@ -142,149 +128,150 @@ export async function saveAttachment(
   fs.writeFileSync(filePath, buffer);
 
   // Save to database
-  await pool.query(
+  const stmt = db.prepare(
     `INSERT INTO chat_attachments 
     (message_id, room_id, filename, filepath, content_type, size)
-    VALUES (?, ?, ?, ?, ?, ?)`,
-    [messageId, roomId, file.name, fileId, file.type, file.size]
+    VALUES (?, ?, ?, ?, ?, ?)`
   );
+  stmt.run(messageId, roomId, file.name, fileId, file.type, file.size);
 
   return fileId;
 }
 
-export async function getMessageAttachments(messageId: number) {
-  const [rows] = await pool.query(
+export function getMessageAttachments(messageId: number) {
+  const stmt = db.prepare(
     `SELECT id, filename, content_type, size 
     FROM chat_attachments 
-    WHERE message_id = ?`,
-    [messageId]
+    WHERE message_id = ?`
   );
-  return rows;
+  return stmt.all(messageId);
 }
 
-export async function getAttachmentInfo(id: string) {
-  const [rows]: any = await pool.query(
+export function getAttachmentInfo(id: string) {
+  const stmt = db.prepare(
     `SELECT filepath, filename, content_type 
     FROM chat_attachments 
-    WHERE id = ?`,
-    [id]
+    WHERE id = ?`
   );
-  return rows[0] || null;
+  return stmt.get(id) || null;
 }
 
-export async function alertExists(serial: string): Promise<boolean> {
-  const [rows]: any = await pool.query(
-    `SELECT 1 FROM alerts WHERE _serial = ?`,
-    [serial]
-  );
-  return rows.length > 0;
+// Alert Functions
+export function alertExists(serial: string): boolean {
+  const stmt = db.prepare(`SELECT 1 FROM alerts WHERE _serial = ?`);
+  return !!stmt.get(serial);
 }
 
-export async function insertAlerts(alerts: any[]) {
-  const connection = await pool.getConnection();
-  try {
-    await connection.beginTransaction();
+export function insertAlerts(alerts: any[]) {
+  const stmt = db.prepare(`
+    INSERT OR IGNORE INTO alerts 
+    (_time, search_name, _serial, severity, status, trigger_time, splunk_link)
+    VALUES (?, ?, ?, ?, ?, ?, ?)
+  `);
 
+  const insertMany = db.transaction((alerts: any) => {
     for (const alert of alerts) {
-      if (!(await alertExists(alert._serial))) {
-        await connection.query(
-          `INSERT IGNORE INTO alerts 
-          (_time, search_name, _serial, severity, status, trigger_time, splunk_link)
-          VALUES (?, ?, ?, ?, ?, ?, ?)`,
-          [
-            alert._time,
-            alert.search_name,
-            alert._serial,
-            alert.severity,
-            alert.status,
-            alert.trigger_time,
-            alert.splunk_link,
-          ]
+      if (!alertExists(alert._serial)) {
+        stmt.run(
+          alert._time,
+          alert.search_name,
+          alert._serial,
+          alert.severity,
+          alert.status,
+          alert.trigger_time,
+          alert.splunk_link
         );
       }
     }
+  });
 
-    await connection.commit();
-  } catch (error) {
-    await connection.rollback();
-    throw error;
-  } finally {
-    connection.release();
-  }
+  insertMany(alerts);
 }
 
-export async function updateAlertStatus(
+export function updateAlertStatus(
   serial: string,
   status: string,
   assignedTo: string
 ) {
-  await pool.query(
+  const stmt = db.prepare(
     `UPDATE alerts 
     SET status = ?, assigned_to = ?, updated_at = CURRENT_TIMESTAMP
-    WHERE _serial = ?`,
-    [status, assignedTo, serial]
+    WHERE _serial = ?`
   );
+  stmt.run(status, assignedTo, serial);
 }
 
-export async function getAlerts() {
-  const [rows] = await pool.query(`
-      SELECT 
-        a.*,
-        CONCAT('100', (SELECT COUNT(*) FROM alerts) - ROW_NUMBER() OVER (ORDER BY trigger_time DESC) + 1) as display_index
+export function getAlerts() {
+  // SQLite doesn't support ROW_NUMBER() directly in this context, so we use a different approach
+  return db
+    .prepare(
+      `
+    WITH numbered_alerts AS (
+      SELECT a.*, 
+             ROW_NUMBER() OVER (ORDER BY trigger_time DESC) as row_num
       FROM alerts a
-      ORDER BY trigger_time DESC
-    `);
-  return rows;
+    )
+    SELECT *, 
+           '100' || (SELECT COUNT(*) FROM alerts) - row_num + 1 as display_index
+    FROM numbered_alerts
+    ORDER BY trigger_time DESC
+  `
+    )
+    .all();
 }
 
-export async function getOrCreateChatRoom(alertSerial: string) {
-  const [rows]: any = await pool.query(
-    "SELECT id FROM chat_rooms WHERE alert_serial = ?",
-    [alertSerial]
-  );
+// Chat Room Functions
+export function getOrCreateChatRoom(alertSerial: string) {
+  let stmt = db.prepare("SELECT id FROM chat_rooms WHERE alert_serial = ?");
+  let room = stmt.get(alertSerial);
 
-  if (rows.length === 0) {
-    const [result]: any = await pool.query(
-      "INSERT INTO chat_rooms (alert_serial) VALUES (?)",
-      [alertSerial]
-    );
-    return { id: result.insertId };
+  if (!room) {
+    stmt = db.prepare("INSERT INTO chat_rooms (alert_serial) VALUES (?)");
+    const info = stmt.run(alertSerial);
+    return { id: info.lastInsertRowid };
   }
 
-  return rows[0];
+  return room;
 }
 
-export async function getChatMessages(roomId: number) {
-  const [rows] = await pool.query(
-    `SELECT 
+export function getChatMessages(roomId: number) {
+  return db
+    .prepare(
+      `
+    SELECT 
       cm.*, 
       u.profile_image as sender_profile_image
     FROM chat_messages cm
     LEFT JOIN users u ON cm.sender = u.username
     WHERE cm.room_id = ?
-    ORDER BY cm.created_at ASC`,
-    [roomId]
-  );
-  return rows;
+    ORDER BY cm.created_at ASC
+  `
+    )
+    .all(roomId);
 }
 
-export async function getTeamMembers() {
-  const [rows] = await pool.query(`
+// Team Member Functions
+export function getTeamMembers() {
+  return db
+    .prepare(
+      `
     SELECT tm.*, u.profile_image
     FROM team_members tm
     LEFT JOIN users u ON tm.name = u.username
     ORDER BY tm.name
-  `);
-  return rows;
+  `
+    )
+    .all();
 }
 
-export async function addTeamMember(name: string, email: string) {
-  await pool.query(
-    "INSERT IGNORE INTO team_members (name, email) VALUES (?, ?)",
-    [name, email]
+export function addTeamMember(name: string, email: string) {
+  const stmt = db.prepare(
+    "INSERT OR IGNORE INTO team_members (name, email) VALUES (?, ?)"
   );
+  stmt.run(name, email);
 }
 
+// User Functions
 export async function createUser(
   username: string,
   email: string,
@@ -293,44 +280,36 @@ export async function createUser(
   const hashedPassword = await bcrypt.hash(password, 10);
   const capitalizedName =
     username.charAt(0).toUpperCase() + username.slice(1).toLowerCase();
-  const [result]: any = await pool.query(
-    `INSERT INTO users (username, email, password_hash) VALUES (?, ?, ?)`,
-    [capitalizedName, email, hashedPassword]
+
+  const stmt = db.prepare(
+    `INSERT INTO users (username, email, password_hash) VALUES (?, ?, ?)`
   );
+  const info = stmt.run(capitalizedName, email, hashedPassword);
+
   await addTeamMember(capitalizedName, email);
-  return result.insertId;
+  return info.lastInsertRowid;
 }
 
-export async function findUserByUsername(username: string) {
-  const [rows]: any = await pool.query(
-    `SELECT * FROM users WHERE username = ?`,
-    [username]
+export function findUserByUsername(username: string) {
+  const stmt = db.prepare(
+    `SELECT * FROM users WHERE username COLLATE NOCASE = ?`
   );
-  return rows[0] || null;
+  return stmt.get(username) || null;
 }
 
-export async function updateLastLogin(userId: number) {
-  await pool.query(
-    `UPDATE users SET last_login = CURRENT_TIMESTAMP WHERE id = ?`,
-    [userId]
+export function updateLastLogin(userId: number) {
+  const stmt = db.prepare(
+    `UPDATE users SET last_login = CURRENT_TIMESTAMP WHERE id = ?`
   );
+  stmt.run(userId);
 }
 
-export async function getTeamMemberByUsername(username: string) {
-  const [rows]: any = await pool.query(
-    "SELECT * FROM team_members WHERE name = ?",
-    [username]
-  );
-  return rows[0] || null;
+export function getTeamMemberByUsername(username: string) {
+  const stmt = db.prepare("SELECT * FROM team_members WHERE name = ?");
+  return stmt.get(username) || null;
 }
 
 // Initialize database on startup
-(async () => {
-  try {
-    await initDb();
-  } catch (error) {
-    console.error("Database initialization failed:", error);
-  }
-})();
+initDb();
 
-export default pool;
+export default db;

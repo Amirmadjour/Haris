@@ -6,7 +6,7 @@ import pool, {
   getTeamMemberByUsername,
   saveAttachment,
 } from "@/lib/db";
-import { getOrCreateChatRoom, getChatMessages } from "@/lib/db";
+import db, { getOrCreateChatRoom, getChatMessages } from "@/lib/db";
 import type { NextRequest } from "next/server";
 import fs from "fs";
 import path from "path";
@@ -74,11 +74,11 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const room: any = await getOrCreateChatRoom(alertSerial);
-    const messageId = await addChatMessage(room.id, sender, message, mentions);
+    const room: any = getOrCreateChatRoom(alertSerial);
+    const messageId: any = addChatMessage(room.id, sender, message, mentions);
 
     // Get sender's profile image
-    const senderProfile = await findUserByUsername(sender);
+    const senderProfile: any = findUserByUsername(sender);
     const sender_profile_image = senderProfile?.profile_image || null;
 
     // Handle file attachments
@@ -110,12 +110,12 @@ export async function POST(request: NextRequest) {
 
     // Send email notifications for mentions
     if (mentions.length > 0) {
-      const alert = await getAlert(alertSerial);
+      const alert: any = getAlert(alertSerial);
       const alertLink = `${process.env.NEXT_PUBLIC_BASE_URL}/alerts/${alertSerial}`;
 
       for (const username of mentions) {
         try {
-          const member = await getTeamMemberByUsername(username);
+          const member: any = getTeamMemberByUsername(username);
           if (member && member.email) {
             await sendMentionNotification(
               member.email,
@@ -141,10 +141,9 @@ export async function POST(request: NextRequest) {
   }
 }
 
-async function getAlert(serial: string) {
-  const [rows]: any = await pool.query(
-    "SELECT search_name FROM alerts WHERE _serial = ?",
-    [serial]
+function getAlert(serial: string) {
+  const stmt = db.prepare(
+    "SELECT search_name FROM alerts WHERE _serial = ?"
   );
-  return rows[0] || null;
+  return stmt.get(serial) || null;
 }

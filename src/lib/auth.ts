@@ -2,13 +2,14 @@
 import bcrypt from "bcryptjs";
 import { findUserByUsername, updateLastLogin } from "@/lib/db";
 
-export async function verifyCredentials(username: string, password: string) {
-  const user = await findUserByUsername(username);
+export function verifyCredentials(username: string, password: string) {
+  const user: any = findUserByUsername(username);
+  console.log("user: ", user);
   if (!user) return null;
 
-  const passwordMatch = await bcrypt.compare(password, user.password_hash);
+  const passwordMatch = bcrypt.compare(password, user.password_hash);
   if (!passwordMatch) return null;
 
-  await updateLastLogin(user.id);
+  updateLastLogin(user.id);
   return user;
 }

@@ -12,7 +12,7 @@ export async function POST(request: Request) {
       );
     }
 
-    await updateAlertStatus(serial, status, assignedTo || null);
+    updateAlertStatus(serial, status, assignedTo || null);
 
     return NextResponse.json({ serial, status, assignedTo });
   } catch (err: any) {

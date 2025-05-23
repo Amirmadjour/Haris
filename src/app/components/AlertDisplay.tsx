@@ -67,106 +67,44 @@ export default function SplunkAlertListener() {
     fetchHistoricalAlerts();
   }, []);
 
-  // Check push notification support and permission
   useEffect(() => {
-    if (
-      "Notification" in window &&
-      "serviceWorker" in navigator &&
-      "PushManager" in window
-    ) {
-      Notification.requestPermission().then((permission) => {
-        if (permission === "granted") {
-          setIsPushEnabled(true);
-          registerServiceWorker();
-        }
-      });
-    }
-  }, []);
-
-  const registerServiceWorker = async () => {
-    try {
-      const registration = await navigator.serviceWorker.register("/sw.js");
-      console.log("Service Worker registered");
-    } catch (error) {
-      console.error("Service Worker registration failed:", error);
-    }
-  };
-
-  const showPushNotification = (alert: SplunkAlert) => {
-    if (!isPushEnabled) return;
-
-    const title = "New Splunk Alert";
-    const options = {
-      body: alert.message || "New alert received",
-      data: {
-        url: window.location.href,
-        time: new Date(parseInt(alert._time) * 1000).toLocaleString(),
-      },
-    };
-
-    if (navigator.serviceWorker?.controller) {
-      navigator.serviceWorker.ready.then((registration) => {
-        registration.showNotification(title, options);
-      });
-    } else {
-      // Fallback if service worker isn't ready
-      new Notification(title, options);
-    }
-  };
-
-  useEffect(() => {
-    const eventSource = new EventSource("/api/sse-alerts", {
-      withCredentials: true,
-    });
+    const eventSource = new EventSource("/api/sse-alerts");
 
     eventSource.onopen = () => {
       setConnectionStatus("connected");
+      console.log("SSE connection established");
     };
 
     eventSource.onmessage = (e) => {
+      console.log("Received raw SSE message:", e.data); // Log raw data
       try {
         const alert = JSON.parse(e.data) as SplunkAlert;
-        console.log("new alert: ", alert);
-        setTimeout(() => {
-          fetchHistoricalAlerts();
-        }, 1000);
+        fetchHistoricalAlerts();
+        console.log("new alert received");
         toast.success(`New alert: ${alert.search_name}`);
-        showPushNotification(alert);
       } catch (error) {
         console.error("Error parsing alert:", error);
       }
     };
 
-    eventSource.onerror = () => {
+    eventSource.onerror = (e) => {
+      console.error("SSE error:", e);
       setConnectionStatus("error");
-      eventSource.close();
-      setTimeout(() => {
-        setConnectionStatus("reconnecting");
-      }, 5000);
+      // Don't close here - let it attempt to reconnect
     };
 
     return () => {
+      console.log("Cleaning up SSE connection");
       eventSource.close();
-      setConnectionStatus("disconnected");
+      // Don't set disconnected here - let onerror handle it
     };
   }, []);
-
-  const enablePushNotifications = async () => {
-    const permission = await Notification.requestPermission();
-    if (permission === "granted") {
-      setIsPushEnabled(true);
-      await registerServiceWorker();
-      toast.success("Push notifications enabled");
-    } else {
-      toast.error("Permission denied for notifications");
-    }
-  };
 
   return (
     <div className="w-full">
       <div className="flex justify-between items-center mb-4">
         <div className="flex items-center gap-2">
-          {/*<span
+          <span
             className={`px-3 py-1 rounded-full text-sm ${
               connectionStatus === "connected"
                 ? "bg-green-100 text-green-800"
@@ -176,15 +114,15 @@ export default function SplunkAlertListener() {
             }`}
           >
             {connectionStatus.toUpperCase()}
-          </span> 
-          {!isPushEnabled && (
+          </span>
+          {/*!isPushEnabled && (
             <button
               onClick={enablePushNotifications}
               className="px-3 py-1 bg-blue-500 text-white rounded-full text-sm hover:bg-blue-600"
             >
               Enable Push
             </button>
-          )}*/}
+          )*/}
         </div>
       </div>
 

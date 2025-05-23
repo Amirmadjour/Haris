@@ -22,8 +22,8 @@ export async function GET(request: NextRequest) {
   addClient(clientId, sendEvent);
 
   try {
-    const room = await getOrCreateChatRoom(alertSerial);
-    const messages = await getChatMessages(room.id);
+    const room: any = getOrCreateChatRoom(alertSerial);
+    const messages = getChatMessages(room.id);
     sendEvent(`data: ${JSON.stringify({ type: "init", messages })}\n\n`);
   } catch (error) {
     console.error("Error sending initial messages:", error);

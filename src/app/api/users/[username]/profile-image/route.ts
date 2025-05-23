@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { writeFile, unlink } from "fs/promises";
 import path from "path";
-import pool from "@/lib/db";
+import db from "@/lib/db"; // Changed from pool to db
 import { existsSync } from "fs";
 
 export async function POST(request: Request, { params }: any) {
@@ -28,11 +28,11 @@ export async function POST(request: Request, { params }: any) {
     }
 
     // Get the old profile image path
-    const [userRows]: any = await pool.query(
-      "SELECT profile_image FROM users WHERE username = ?",
-      [username]
+    const stmt = db.prepare(
+      "SELECT profile_image FROM users WHERE username = ?"
     );
-    const oldProfileImage = userRows[0]?.profile_image;
+    const user: any = stmt.get(username);
+    const oldProfileImage = user?.profile_image;
 
     // Generate new file name and path
     const fileExt = path.extname(file.name);
@@ -46,7 +46,7 @@ export async function POST(request: Request, { params }: any) {
         "public",
         oldProfileImage.substring(1) // Remove leading slash
       );
-      
+
       if (existsSync(oldImagePath)) {
         await unlink(oldImagePath);
       }
@@ -58,10 +58,10 @@ export async function POST(request: Request, { params }: any) {
     await writeFile(filePath, buffer);
 
     // Update database with new image path
-    await pool.query(
-      "UPDATE users SET profile_image = ? WHERE username = ?",
-      [`/profiles/${fileName}`, username]
+    const updateStmt = db.prepare(
+      "UPDATE users SET profile_image = ? WHERE username = ?"
     );
+    updateStmt.run(`/profiles/${fileName}`, username);
 
     return NextResponse.json({
       success: true,
