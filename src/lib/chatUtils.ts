@@ -1,5 +1,3 @@
-import { getOrCreateChatRoom } from "@/lib/db";
-
 // Store connected clients with proper typing
 const clients = new Map<string, (data: string) => void>();
 

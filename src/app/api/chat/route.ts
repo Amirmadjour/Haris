@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import pool, {
   addChatMessage,
+  findUserByUsername,
   getMessageAttachments,
   getTeamMemberByUsername,
   saveAttachment,
@@ -76,6 +77,10 @@ export async function POST(request: NextRequest) {
     const room: any = await getOrCreateChatRoom(alertSerial);
     const messageId = await addChatMessage(room.id, sender, message, mentions);
 
+    // Get sender's profile image
+    const senderProfile = await findUserByUsername(sender);
+    const sender_profile_image = senderProfile?.profile_image || null;
+
     // Handle file attachments
     const attachments = [];
     for (const [key, value] of formData.entries()) {
@@ -97,6 +102,7 @@ export async function POST(request: NextRequest) {
       message,
       attachments,
       created_at: new Date().toISOString(),
+      sender_profile_image,
     };
 
     // Broadcast the message

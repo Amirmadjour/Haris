@@ -2,6 +2,7 @@
 "use server";
 
 import { verifyCredentials } from "@/lib/auth";
+import { findUserByUsername } from "@/lib/db";
 import { cookies } from "next/headers";
 
 export async function signInAction(username: string, password: string) {
@@ -37,4 +38,11 @@ export async function getCurrentUserAction() {
     console.error("Failed to parse user data from cookie:", error);
     return null;
   }
+}
+
+export async function getCurrentUserProfile(username: string) {
+  const user = await findUserByUsername(username);
+  return {
+    profile_image: user?.profile_image || null,
+  };
 }

@@ -2,7 +2,7 @@
 import Image from "next/image";
 import NotificationBell from "./NotificationBell";
 import { useRouter } from "next/navigation";
-import { signOutAction } from "../actions/auth";
+import { getCurrentUserProfile, signOutAction } from "../actions/auth";
 import { LogOut, Camera, User } from "lucide-react";
 import {
   AlertDialog,
@@ -19,17 +19,31 @@ import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { uploadProfileImage } from "@/lib/profile";
 import { toast } from "sonner";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { Avatar, AvatarImage } from "@/components/ui/avatar";
 
 export default function Nav({ user }: { user: any }) {
   const router = useRouter();
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const [profileImage, setProfileImage] = useState(user?.profile_image || null);
+  const [profileImage, setProfileImage] = useState<string | null>(null);
 
   const handleLogout = async () => {
     await signOutAction();
     router.push("/auth/login");
   };
+
+  useEffect(() => {
+    const fetchProfileImage = async () => {
+      try {
+        const { profile_image } = await getCurrentUserProfile(user.username);
+        setProfileImage(profile_image);
+      } catch (error) {
+        console.error("Failed to fetch profile image:", error);
+      }
+    };
+
+    fetchProfileImage();
+  }, [user.username]);
 
   const handleProfileImageChange = async (
     e: React.ChangeEvent<HTMLInputElement>
@@ -54,7 +68,7 @@ export default function Nav({ user }: { user: any }) {
       }
 
       const { imageUrl } = await uploadProfileImage(user.username, file);
-      setProfileImage(imageUrl);
+      setProfileImage(`${imageUrl}?${Date.now()}`);
       console.log(imageUrl);
       toast.success("Profile image updated successfully");
     } catch (error) {
@@ -110,14 +124,9 @@ export default function Nav({ user }: { user: any }) {
         <div className="flex items-center justify-center gap-2 rounded-full hover:bg-white/5 p-1.5 transition-all duration-200 ease-in-out relative group">
           <div className="relative">
             {profileImage ? (
-              <Image
-                src={profileImage}
-                alt="user"
-                width={36}
-                height={36}
-                className="rounded-full w-[36px] h-[36px] object-cover"
-                priority
-              />
+              <Avatar>
+                <AvatarImage src={profileImage} alt="user" />
+              </Avatar>
             ) : (
               <div className="flex items-center justify-center bg-[#4C4C4C] rounded-full w-[36px] h-[36px]">
                 <User width={24} height={24} className="rounded-full" />
