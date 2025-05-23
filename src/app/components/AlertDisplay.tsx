@@ -126,6 +126,7 @@ export default function SplunkAlertListener() {
     eventSource.onmessage = (e) => {
       try {
         const alert = JSON.parse(e.data) as SplunkAlert;
+        console.log("new alert: ", alert);
         setTimeout(() => {
           fetchHistoricalAlerts();
         }, 1000);
