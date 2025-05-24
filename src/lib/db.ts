@@ -134,7 +134,14 @@ export async function saveAttachment(
     VALUES (?, ?, ?, ?, ?, ?)`
   );
 
-  const result = stmt.run(messageId, roomId, file.name, fileId, file.type, file.size);
+  const result = stmt.run(
+    messageId,
+    roomId,
+    file.name,
+    fileId,
+    file.type,
+    file.size
+  );
 
   return result.lastInsertRowid;
 }
@@ -200,6 +207,15 @@ export function updateAlertStatus(
     WHERE _serial = ?`
   );
   stmt.run(status, assignedTo, serial);
+}
+
+export function updateStatus(serial: string, status: string) {
+  const stmt = db.prepare(
+    `UPDATE alerts 
+    SET status = ?, updated_at = CURRENT_TIMESTAMP
+    WHERE _serial = ?`
+  );
+  stmt.run(status, serial);
 }
 
 export function getAlerts() {

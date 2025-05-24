@@ -22,6 +22,22 @@ export async function updateAlertStatus(
   }
 }
 
+export async function updateStatus(
+  serial: string,
+  status: string,
+) {
+  try {
+    await api.post("/alerts/update-only-status", {
+      serial,
+      status: status,
+    });
+    revalidatePath(`/alerts/${serial}`);
+  } catch (error) {
+    console.error("Failed to update status:", error);
+    throw error;
+  }
+}
+
 export async function updateAlertSeverity(serial: string, severity: string) {
   try {
     await api.post("/alerts/update-severity", {

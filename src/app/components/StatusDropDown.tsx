@@ -8,7 +8,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { ChevronDown } from "lucide-react";
 import { useTransition } from "react";
-import { updateAlertStatus } from "@/app/actions/alerts";
+import { updateAlertStatus, updateStatus } from "@/app/actions/alerts";
 
 const statusOptions = ["Open", "Under Engineering Review", "Closed"];
 
@@ -25,7 +25,12 @@ export function StatusDropdown({
 
   const handleStatusChange = (status: string) => {
     startTransition(async () => {
-      await updateAlertStatus(alertSerial, "", status);
+      if (status == "Open") {
+        await updateAlertStatus(alertSerial, "", status);
+      }
+      else {
+        await updateStatus(alertSerial, status)
+      }
     });
   };
 
