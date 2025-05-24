@@ -10,11 +10,7 @@ import { ChevronDown } from "lucide-react";
 import { useTransition } from "react";
 import { updateAlertStatus } from "@/app/actions/alerts";
 
-const statusOptions = [
-  "Open",
-  "Under Engineering Review",
-  "Closed",
-];
+const statusOptions = ["Open", "Under Engineering Review", "Closed"];
 
 export function StatusDropdown({
   currentStatus,

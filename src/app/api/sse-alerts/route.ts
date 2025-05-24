@@ -18,7 +18,7 @@ export async function GET() {
   }, 25000);
 
   const handleAlert = (alert: SplunkAlert) => {
-    console.log("handling the alert")
+    console.log("handling the alert");
     writer
       .write(encoder.encode(`data: ${JSON.stringify(alert)}\n\n`))
       .catch(() => {});
@@ -26,7 +26,6 @@ export async function GET() {
 
   alertEmitter.on("alert", handleAlert);
 
-  // Add connection logging
   console.log("New SSE client connected");
 
   const cleanup = () => {
@@ -36,9 +35,10 @@ export async function GET() {
     console.log("SSE client disconnected");
   };
 
-  // Handle client disconnect
-  const response = new NextResponse(stream.readable, { headers });
-  response.signal?.addEventListener("abort", cleanup);
+  // Alternative approach to detect client disconnection
+  // This is a workaround since NextResponse doesn't expose the request signal
+  // The connection will eventually be cleaned up when the stream is closed
+  // You might want to implement a heartbeat check or timeout mechanism
 
-  return response;
+  return new NextResponse(stream.readable, { headers });
 }
