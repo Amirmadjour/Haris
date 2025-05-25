@@ -77,6 +77,13 @@ pm2 save
 pm2 startup
 ```
 
+
+### 6: check splunk
+```bash
+curl -s -k -u "Admin:'password'" \
+  "https://your-splunk-server:8089/services/auth/login" \
+  -d "output_mode=json"
+```
 ---
 
 ## 🚀 Deployment
