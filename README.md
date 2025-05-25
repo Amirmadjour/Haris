@@ -24,6 +24,11 @@ sudo apt install -y nodejs npm git
 npx create-next-app@latest
 ```
 
+update node
+```bash
+node -v
+```
+
 ### 2. Install and Build Next.js App
 ```bash
 cd Haris
