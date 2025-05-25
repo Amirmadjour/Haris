@@ -42,6 +42,11 @@ npm run build
 npm start
 ```
 
+access haris
+```bash
+npm start -- --hostname 0.0.0.0
+```
+
 ### 3. Set Up ngrok
 ```bash
 npm install -g ngrok
