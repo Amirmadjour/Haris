@@ -219,20 +219,18 @@ export function updateStatus(serial: string, status: string) {
 }
 
 export function getAlerts() {
-  // SQLite doesn't support ROW_NUMBER() directly in this context, so we use a different approach
   return db
     .prepare(
       `
-    WITH numbered_alerts AS (
-      SELECT a.*, 
-             ROW_NUMBER() OVER (ORDER BY trigger_time DESC) as row_num
-      FROM alerts a
-    )
-    SELECT *, 
-           '100' || (SELECT COUNT(*) FROM alerts) - row_num + 1 as display_index
-    FROM numbered_alerts
-    ORDER BY trigger_time DESC
-  `
+      WITH total_count AS (
+        SELECT COUNT(*) as count FROM alerts
+      )
+      SELECT 
+        a.*,
+        '100' || (total_count.count - ROW_NUMBER() OVER (ORDER BY trigger_time DESC) + 1) as display_index
+      FROM alerts a, total_count
+      ORDER BY trigger_time DESC
+      `
     )
     .all();
 }

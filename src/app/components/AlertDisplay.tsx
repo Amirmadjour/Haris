@@ -104,7 +104,7 @@ export default function SplunkAlertListener() {
     <div className="w-full">
       <div className="flex justify-between items-center mb-4">
         <div className="flex items-center gap-2">
-          <span
+          {/*<span
             className={`px-3 py-1 rounded-full text-sm ${
               connectionStatus === "connected"
                 ? "bg-green-100 text-green-800"
@@ -115,7 +115,7 @@ export default function SplunkAlertListener() {
           >
             {connectionStatus.toUpperCase()}
           </span>
-          {/*!isPushEnabled && (
+          {!isPushEnabled && (
             <button
               onClick={enablePushNotifications}
               className="px-3 py-1 bg-blue-500 text-white rounded-full text-sm hover:bg-blue-600"

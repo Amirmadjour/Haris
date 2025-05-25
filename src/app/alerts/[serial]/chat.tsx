@@ -29,6 +29,7 @@ export default function AlertChat({
       const response = await fetch(`/api/chat?alertSerial=${alertSerial}`);
       const data = await response.json();
       setMessages(data.messages || []);
+      console.log("data.messages: ", data.messages);
     } catch (error) {
       console.error("Failed to fetch messages", error);
       toast.error("Error", { description: "Failed to fetch messages" });
@@ -198,7 +199,11 @@ export default function AlertChat({
             <div key={message.id} className="mb-4 flex gap-3">
               <Avatar>
                 <AvatarImage
-                  src={message.sender_profile_image || "/default-user.png"}
+                  src={
+                    `/api/users/${
+                      message.sender
+                    }/profile-image?t=${Date.now()}` || "/default-user.png"
+                  }
                   alt={message.sender}
                 />
                 <AvatarFallback className="bg-primary">
