@@ -22,7 +22,7 @@ sudo apt install -y nodejs npm git
 
 ### 2. Install and Build Next.js App
 ```bash
-cd /home/username/your-nextjs-app
+cd Haris
 npm install
 npm run build
 npm start
