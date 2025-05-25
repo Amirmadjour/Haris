@@ -46,7 +46,7 @@ rebuild haris
 reboot the server
 ```bash
 rm -rf .next
-npm build
+npm run build
 npm start
 ```
 
