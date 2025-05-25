@@ -70,7 +70,6 @@ ngrok http 3000
 ```bash
 npm install -g pm2
 pm2 start npm --name "nextjs" -- start
-pm2 start "ngrok http 3000" --name "ngrok"
 pm2 save
 ```
 - Copy and run the exact command provided.
