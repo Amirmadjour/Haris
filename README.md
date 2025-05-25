@@ -26,9 +26,11 @@ npx create-next-app@latest
 
 update node
 ```bash
-curl -fsSL https://deb.nodesource.com/setup_18.x | sudo -E bash -
-sudo apt update
-sudo apt install -y nodejs
+sudo apt purge nodejs npm -y  
+sudo apt autoremove -y        
+nvm install --lts  
+nvm use --lts      
+nvm alias default 20
 
 ```
 
