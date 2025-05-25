@@ -36,7 +36,10 @@ export default function Nav({ user }: { user: any }) {
     const fetchProfileImage = async () => {
       try {
         const { profile_image } = await getCurrentUserProfile(user.username);
-        setProfileImage(profile_image);
+        const profileImageUrl = `/api/users/${
+          user.username
+        }/profile-image?t=${Date.now()}`;
+        setProfileImage(profileImageUrl);
       } catch (error) {
         console.error("Failed to fetch profile image:", error);
       }
@@ -68,7 +71,13 @@ export default function Nav({ user }: { user: any }) {
       }
 
       const { imageUrl } = await uploadProfileImage(user.username, file);
-      setProfileImage(`${imageUrl}?${Date.now()}`);
+
+      const profileImageUrl = `/api/users/${
+        user.username
+      }/profile-image?t=${Date.now()}`;
+
+      setProfileImage("");
+      setTimeout(() => setProfileImage(profileImageUrl), 100);
       console.log(imageUrl);
       toast.success("Profile image updated successfully");
     } catch (error) {
@@ -124,9 +133,12 @@ export default function Nav({ user }: { user: any }) {
         <div className="flex items-center justify-center gap-2 rounded-full hover:bg-white/5 p-1.5 transition-all duration-200 ease-in-out relative group">
           <div className="relative">
             {profileImage ? (
-              <Avatar>
-                <AvatarImage src={profileImage} alt="user" />
-              </Avatar>
+              <img
+                src={profileImage}
+                alt="user"
+                className="w-[36px] h-[36px] rounded-full object-cover"
+                onError={() => setProfileImage(null)}
+              />
             ) : (
               <div className="flex items-center justify-center bg-[#4C4C4C] rounded-full w-[36px] h-[36px]">
                 <User width={24} height={24} className="rounded-full" />

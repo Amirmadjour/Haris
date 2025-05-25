@@ -1,8 +1,33 @@
 import { NextResponse } from "next/server";
-import { writeFile, unlink } from "fs/promises";
+import { writeFile, unlink, readFile } from "fs/promises";
 import path from "path";
 import db from "@/lib/db"; // Changed from pool to db
 import { existsSync } from "fs";
+
+// route.ts
+export async function GET(request: Request, { params }: any) {
+  const { username } = params;
+  const user: any = db
+    .prepare("SELECT profile_image FROM users WHERE username = ?")
+    .get(username);
+
+  if (!user?.profile_image) return new NextResponse(null, { status: 404 });
+
+  const filePath = path.join(
+    process.cwd(),
+    "public",
+    user.profile_image.substring(1)
+  );
+  if (!existsSync(filePath)) return new NextResponse(null, { status: 404 });
+
+  const imageBuffer = await readFile(filePath);
+  return new NextResponse(imageBuffer, {
+    headers: {
+      "Content-Type": "image/*",
+      "Cache-Control": "no-store, max-age=0", // Disable caching
+    },
+  });
+}
 
 export async function POST(request: Request, { params }: any) {
   try {
