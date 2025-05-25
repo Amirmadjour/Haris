@@ -42,6 +42,15 @@ npm run build
 npm start
 ```
 
+rebuild haris
+reboot the server
+```bash
+rm -rf .next
+npm build
+npm start
+```
+
+
 access haris
 ```bash
 npm start -- --hostname 0.0.0.0
