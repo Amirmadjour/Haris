@@ -26,8 +26,11 @@ npx create-next-app@latest
 
 update node
 ```bash
-curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
-sudo apt install -y nodejs
+curl https://raw.githubusercontent.com/creationix/nvm/master/install.sh | bash
+source ~/.nvm/nvm.sh
+nvm install --lts
+nvm use --lts
+npm --version
 
 ```
 
