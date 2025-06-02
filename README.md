@@ -12,6 +12,45 @@
 
 ---
 
+## Resolve connection issues
+
+# Check if Splunk is listening on 8089 (management port)
+
+```bash
+netstat -tuln | grep 8089
+```
+
+# Or use `ss` (modern alternative to netstat)
+```bash
+ss -tuln | grep 8089
+```
+
+# Check all Splunk-related ports (8000, 8089, 9997, etc.)
+```bash
+netstat -tuln | grep splunk
+```
+
+# Test if the forwarded port is reachable
+
+```bash
+telnet localhost 8089  # (If connection opens, the port is up)
+```
+
+Check Firewall Rules
+```bash
+sudo ufw status  # Check if 8089 is allowed
+sudo ufw allow 8089/tcp
+```
+
+# Check splunk
+
+### Get All Alerts
+```bash
+curl -k -u admin:MadjourAmir1# https://localhost:8089/services/alerts/fired_alerts \
+  --get -d output_mode=json
+```
+
+
 ## 🔧 Setup Instructions
 
 ### 1. Install Dependencies
