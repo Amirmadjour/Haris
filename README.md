@@ -1,46 +1,12 @@
 
 # Installation Guide
 
-## ⚠️ CAUTION
-- There are some absolute paths (like for attachments in chats) that need to be configured for the frontend.
-
-## Prerequisites
-- SMTP server
-- Splunk host
-- Server IP address
-- SSH credentials
+## ⚠️ Disclaimer
+- Scheduled reports should be owned by app and not admin for HARIS to fetch them
+- All reports are considered with severity info
+- The server uses pooling for fetching data (every 5 seconds)
 
 ---
-
-## Resolve connection issues
-
-# Check if Splunk is listening on 8089 (management port)
-
-```bash
-netstat -tuln | grep 8089
-```
-
-# Or use `ss` (modern alternative to netstat)
-```bash
-ss -tuln | grep 8089
-```
-
-# Check all Splunk-related ports (8000, 8089, 9997, etc.)
-```bash
-netstat -tuln | grep splunk
-```
-
-# Test if the forwarded port is reachable
-
-```bash
-telnet localhost 8089  # (If connection opens, the port is up)
-```
-
-Check Firewall Rules
-```bash
-sudo ufw status  # Check if 8089 is allowed
-sudo ufw allow 8089/tcp
-```
 
 # Check splunk
 

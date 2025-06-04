@@ -16,6 +16,20 @@ const mapSeverity = (level: number): string => {
   return severityMap[level as keyof typeof severityMap] || "Unknown";
 };
 
+function buildSplunkReportUrl(reportName: string, sid: string): string {
+  const baseUrl = process.env.SPLUNK_UI_BASE_URL;
+  const params = new URLSearchParams({
+    locale: "en-US",
+    s: reportName,
+    sid: sid,
+    "display.page.search.mode": "smart",
+    "dispatch.sample_ratio": "1",
+    earliest: "-1d",
+    latest: "now",
+  });
+  return `${baseUrl}/en-US/app/search/report?${params.toString()}`;
+}
+
 function buildSplunkSearchUrl({
   search_name,
   splQuery,
@@ -91,19 +105,14 @@ export async function GET() {
       .filter((entry: any) => entry.name && entry.name !== "-")
       .map((entry: any) => entry.name);
 
-    console.log("alertNames: ", alertNames);
-
     const historicalAlerts = alertDetails
       .flatMap((detail) =>
         detail?.entry.map((entry: any) => {
-          //console.log("Entry: ", entry);
           const splQuery = savedSearchesResponse.data.entry.find(
             (entry_s: any) => {
               return entry_s?.name === entry?.content?.savedsearch_name;
             }
           )?.content?.qualifiedSearch;
-
-          //console.log("splQuery: ", splQuery);
 
           return {
             _time: entry?.content?.trigger_time_rendered,
@@ -123,8 +132,6 @@ export async function GET() {
       )
       .filter(async (alert) => !alertExists(alert._serial));
 
-    //console.log("Historical alerts: ", historicalAlerts);
-
     const reports = savedSearchesResponse.data.entry.filter((search: any) => {
       return !alertNames.includes(search.name);
     });
@@ -143,61 +150,74 @@ export async function GET() {
             }
           );
 
-          // Process each historical search job
-          const reportAlerts = await Promise.all(
+          // Only process reports that have history entries with events
+          const validReports = await Promise.all(
             historyResponse.data.entry.map(async (historyEntry: any) => {
-              // Get events for this search job
-              const eventsResponse = await axios.get(
-                `${historyEntry.id}/events`,
-                {
-                  params: {
-                    output_mode: "json",
-                    count: 1000,
-                  },
-                  headers,
-                  httpsAgent: agent,
-                }
-              );
+              try {
+                const eventsResponse = await axios.get(
+                  `${historyEntry.id}/events`,
+                  {
+                    params: {
+                      output_mode: "json",
+                      count: 1, // Just check if there are any events
+                    },
+                    headers,
+                    httpsAgent: agent,
+                  }
+                );
 
-              return eventsResponse.data.results.map(
-                (event: any, index: number) => {
-                  //console.log("Report", event);
+                if (
+                  eventsResponse.data.results &&
+                  eventsResponse.data.results.length > 0
+                ) {
+                  const sidTimestamp =
+                    historyEntry.name.match(/_at_(\d+)_/)?.[1];
+                  let triggerTime = sidTimestamp
+                    ? new Date(parseInt(sidTimestamp) * 1000).toISOString()
+                    : null;
+                  console.log("triggerTime", triggerTime);
                   return {
-                    _time: event._time,
+                    _time: sidTimestamp,
                     search_name: report.name,
-                    _serial: historyEntry.name + index,
+                    _serial: historyEntry.name,
                     severity: "Info",
                     status: "Open",
-                    trigger_time: event._indextime,
-                    splunk_link: event.id,
+                    trigger_time: sidTimestamp,
+                    splunk_link: buildSplunkReportUrl(
+                      report.name,
+                      historyEntry.name
+                    ),
                     type: "report",
                   };
                 }
-              );
+                return null;
+              } catch (error) {
+                console.error(
+                  `Error checking events for report ${report.name}:`,
+                  error
+                );
+                return null;
+              }
             })
           );
 
-          return reportAlerts.flat();
+          return validReports.filter((report) => report !== null);
         } catch (error) {
           console.error(`Error processing report ${report.name}:`, error);
+          return [];
         }
       })
     );
 
     const historicalReports = reportDetails
       .flat()
-      .filter((report) => report != undefined)
-      .filter(async (report) => !alertExists(report._serial));
-
-    console.log("historicalReports: ", historicalReports.length);
+      .filter((report) => report !== null && !alertExists(report._serial));
 
     const allHistoricalItems = [...historicalAlerts, ...historicalReports].sort(
       (a: any, b: any) => b.trigger_time - a.trigger_time
     );
 
     if (allHistoricalItems.length > 0) {
-      console.log("All historical items: ", allHistoricalItems.length);
-      console.log("first historcal item: ", allHistoricalItems[0]);
       insertAlerts(allHistoricalItems);
     }
 

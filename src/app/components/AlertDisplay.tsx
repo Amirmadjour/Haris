@@ -48,16 +48,9 @@ export default function SplunkAlertListener() {
       const alertsList = await alertsResponse.json();
 
       if (alertsList.length === 0) return;
-      console.log(
-        "Whether new or not",
-        alertsList.length,
-        AlertsNumber,
-        alerts,
-        data
-      );
       if (alertsList.length !== AlertsNumber && AlertsNumber !== 0) {
         toast.success(
-          `New alert: ${alertsList[alertsList.length - 1].search_name}`
+          `New alert: ${alertsList[0].search_name}`
         );
       }
       AlertsNumber = alertsList.length;
@@ -73,7 +66,6 @@ export default function SplunkAlertListener() {
     try {
       const res = await fetch("/api/history-alerts");
       const data = await res.json();
-      console.log("Data: ", data);
 
       await fetchAlerts();
     } catch (err) {
@@ -122,7 +114,6 @@ export default function SplunkAlertListener() {
         const alert = JSON.parse(e.data) as SplunkAlert;
         // Fetch updated alerts when SSE message is received
         fetchAlerts();
-        console.log("new alert received");
         toast.success(`New alert: ${alert.search_name}`);
       } catch (error) {
         console.error("Error parsing alert:", error);
