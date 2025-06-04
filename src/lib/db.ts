@@ -76,6 +76,12 @@ export async function initDb() {
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         last_login TIMESTAMP NULL
       );
+      CREATE TABLE IF NOT EXISTS sessions (
+        id TEXT PRIMARY KEY,
+        user_id INTEGER NOT NULL,
+        expires_at INTEGER NOT NULL,
+        FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+      );
     `);
 
     // Create indexes
@@ -322,6 +328,34 @@ export function updateLastLogin(userId: number) {
 export function getTeamMemberByUsername(username: string) {
   const stmt = db.prepare("SELECT * FROM team_members WHERE name = ?");
   return stmt.get(username) || null;
+}
+
+// Session functions
+export function createSession(userId: number, sessionId: string, expiresAt: number) {
+  const stmt = db.prepare(
+    `INSERT INTO sessions (id, user_id, expires_at) VALUES (?, ?, ?)`
+  );
+  stmt.run(sessionId, userId, expiresAt);
+}
+
+export function validateSession(sessionId: string) {
+  const stmt = db.prepare(`
+    SELECT u.* 
+    FROM sessions s
+    JOIN users u ON s.user_id = u.id
+    WHERE s.id = ? AND s.expires_at > ?
+  `);
+  return stmt.get(sessionId, Date.now()) || null;
+}
+
+export function deleteSession(sessionId: string) {
+  const stmt = db.prepare(`DELETE FROM sessions WHERE id = ?`);
+  stmt.run(sessionId);
+}
+
+export function deleteAllUserSessions(userId: number) {
+  const stmt = db.prepare(`DELETE FROM sessions WHERE user_id = ?`);
+  stmt.run(userId);
 }
 
 // Initialize database on startup

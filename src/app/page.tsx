@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { DataTable } from "./components/DataTable";
 import Nav from "./components/Nav";
 import AlertDisplay from "@/app/components/AlertDisplay";
-import { getCurrentUserAction } from "./actions/auth";
+import { getCurrentUserAction, signOutAction } from "./actions/auth";
 import { useRouter } from "next/navigation";
 
 export default function Home() {
@@ -14,12 +14,18 @@ export default function Home() {
 
   useEffect(() => {
     const checkAuth = async () => {
-      const currentUser = await getCurrentUserAction();
-      console.log("current user: ", currentUser)
-      if (!currentUser) {
+      try {
+        const currentUser = await getCurrentUserAction();
+        if (!currentUser) {
+          await signOutAction();
+          router.push("/auth/login");
+        } else {
+          setUser(currentUser);
+        }
+      } catch (error) {
+        console.error("Authentication error:", error);
+        await signOutAction();
         router.push("/auth/login");
-      } else {
-        setUser(currentUser);
       }
     };
     checkAuth();

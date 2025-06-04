@@ -2,46 +2,64 @@
 "use server";
 
 import { verifyCredentials } from "@/lib/auth";
-import { findUserByUsername } from "@/lib/db";
+import { findUserByUsername, createSession, validateSession, deleteSession, deleteAllUserSessions } from "@/lib/db";
 import { cookies } from "next/headers";
+import { v4 as uuidv4 } from 'uuid';
 
 export async function signInAction(username: string, password: string) {
-  const user = verifyCredentials(username, password);
+  const user = await verifyCredentials(username, password);
   if (!user) return null;
 
-  // Stringify the user object before storing in cookie
-  const userString = JSON.stringify(user);
+  // Create session
+  const sessionId = uuidv4();
+  const expiresAt = Date.now() + 60 * 60 * 24 * 7 * 1000; // 1 week
   
-  (await cookies()).set("auth-token", userString, {
+  // Store session in database
+  createSession(user.id, sessionId, expiresAt);
+
+  // Set secure cookie with session ID only
+  (await cookies()).set("auth-token", sessionId, {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
     sameSite: "lax",
     path: "/",
-    maxAge: 60 * 60 * 24 * 7, // 1 week expiry
+    maxAge: 60 * 60 * 24 * 7, // 1 week
   });
-  
+
   return user;
 }
 
 export async function signOutAction() {
+  const sessionId = (await cookies()).get("auth-token")?.value;
+  if (sessionId) {
+    deleteSession(sessionId);
+  }
   (await cookies()).delete("auth-token");
 }
 
 export async function getCurrentUserAction() {
-  const token = (await cookies()).get("auth-token")?.value;
-  if (!token) return null;
+  const sessionId = (await cookies()).get("auth-token")?.value;
+  if (!sessionId) return null;
   
-  try {
-    // Parse the stored user data
-    return JSON.parse(token);
-  } catch (error) {
-    console.error("Failed to parse user data from cookie:", error);
+  // Validate session against database
+  const user = validateSession(sessionId);
+  if (!user) {
+    // Clean up invalid session
+    (await cookies()).delete("auth-token");
     return null;
   }
+  
+  return user;
 }
 
 export async function getCurrentUserProfile(username: string) {
   const user: any = findUserByUsername(username);
+  if (!user) {
+    // User deleted - clean up all their sessions
+    deleteAllUserSessions(user.id);
+    return null;
+  }
+  
   return {
     profile_image: user?.profile_image || null,
   };
