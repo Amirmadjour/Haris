@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { type SplunkAlert } from "@/lib/splunkAlerts";
 import { toast } from "sonner";
 import StatisticCard from "./StatisticCard";
@@ -39,6 +39,34 @@ export default function SplunkAlertListener() {
   const [connectionStatus, setConnectionStatus] = useState("connecting");
   const [isPushEnabled, setIsPushEnabled] = useState(false);
   const [isLoadingHistory, setIsLoadingHistory] = useState(true);
+  const pollingIntervalRef = useRef<NodeJS.Timeout>(null);
+  let AlertsNumber = 0;
+
+  const fetchAlerts = async () => {
+    try {
+      const alertsResponse = await fetch("/api/alerts/list");
+      const alertsList = await alertsResponse.json();
+
+      if (alertsList.length === 0) return;
+      console.log(
+        "Whether new or not",
+        alertsList.length,
+        AlertsNumber,
+        alerts,
+        data
+      );
+      if (alertsList.length !== AlertsNumber && AlertsNumber !== 0) {
+        toast.success(
+          `New alert: ${alertsList[alertsList.length - 1].search_name}`
+        );
+      }
+      AlertsNumber = alertsList.length;
+      setData(alertsList);
+      setAlerts(transformData(alertsList));
+    } catch (err) {
+      console.error("Failed to fetch alerts:", err);
+    }
+  };
 
   // Add this function to fetch historical alerts
   const fetchHistoricalAlerts = async () => {
@@ -47,14 +75,7 @@ export default function SplunkAlertListener() {
       const data = await res.json();
       console.log("Data: ", data);
 
-      const alertsResponse = await fetch("/api/alerts/list");
-      const alertsList = await alertsResponse.json();
-
-      console.log("data: ", alertsList);
-      if (alertsList.length === 0) return;
-      setData(alertsList);
-
-      setAlerts(transformData(alertsList));
+      await fetchAlerts();
     } catch (err) {
       console.error("Client failed to fetch alerts:", err);
     } finally {
@@ -62,9 +83,29 @@ export default function SplunkAlertListener() {
     }
   };
 
+  // Setup polling interval
+  const startPolling = () => {
+    // Clear existing interval if any
+    if (pollingIntervalRef.current) {
+      clearInterval(pollingIntervalRef.current);
+    }
+
+    // Set new interval
+    pollingIntervalRef.current = setInterval(() => {
+      fetchHistoricalAlerts();
+    }, 5000); // 5 seconds
+  };
+
   // Add this useEffect for initial historical data load
   useEffect(() => {
     fetchHistoricalAlerts();
+    startPolling();
+
+    return () => {
+      if (pollingIntervalRef.current) {
+        clearInterval(pollingIntervalRef.current);
+      }
+    };
   }, []);
 
   useEffect(() => {
@@ -79,7 +120,8 @@ export default function SplunkAlertListener() {
       console.log("Received raw SSE message:", e.data); // Log raw data
       try {
         const alert = JSON.parse(e.data) as SplunkAlert;
-        fetchHistoricalAlerts();
+        // Fetch updated alerts when SSE message is received
+        fetchAlerts();
         console.log("new alert received");
         toast.success(`New alert: ${alert.search_name}`);
       } catch (error) {
@@ -90,13 +132,13 @@ export default function SplunkAlertListener() {
     eventSource.onerror = (e) => {
       console.error("SSE error:", e);
       setConnectionStatus("error");
-      // Don't close here - let it attempt to reconnect
+      // Ensure polling continues when SSE fails
+      startPolling();
     };
 
     return () => {
       console.log("Cleaning up SSE connection");
       eventSource.close();
-      // Don't set disconnected here - let onerror handle it
     };
   }, []);
 
@@ -116,7 +158,8 @@ export default function SplunkAlertListener() {
             {connectionStatus.toUpperCase()}
           </span>
           {!isPushEnabled && (
-            <button
+            <bAnalyst
+utton
               onClick={enablePushNotifications}
               className="px-3 py-1 bg-blue-500 text-white rounded-full text-sm hover:bg-blue-600"
             >
